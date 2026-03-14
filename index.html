@@ -10,6 +10,9 @@
 <title>ASL Driver Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
 :root{--green:#2ECC71;--yellow:#F1C40F;--red:#E74C3C;--orange:#E67E22;--blue:#3498DB;--purple:#9B59B6;--bg:#0D0D0D;--surface:#1A1A1A;--surface2:#252525;--border:#2E2E2E;--text:#F0F0F0;--muted:#777}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -125,6 +128,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .form-label{font-size:0.75rem;color:var(--muted);font-weight:500;margin-bottom:0.35rem;display:block}
 .form-select,.form-input,.form-textarea{width:100%;padding:0.65rem 0.85rem;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s}
 .form-select:focus,.form-input:focus,.form-textarea:focus{border-color:var(--green)}
+.flatpickr-calendar{background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:12px!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;font-family:'DM Sans',sans-serif!important}
+.flatpickr-months .flatpickr-month{background:var(--surface)!important;color:var(--text)!important}
+.flatpickr-current-month .flatpickr-monthDropdown-months{background:var(--surface2)!important;color:var(--text)!important}
+.flatpickr-current-month input.cur-year{color:var(--text)!important}
+.flatpickr-months .flatpickr-prev-month,.flatpickr-months .flatpickr-next-month{fill:var(--green)!important;color:var(--green)!important}
+.flatpickr-months .flatpickr-prev-month:hover,.flatpickr-months .flatpickr-next-month:hover{fill:var(--text)!important;color:var(--text)!important}
+span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
+.flatpickr-day{color:var(--text)!important;border-radius:8px!important}
+.flatpickr-day:hover{background:var(--surface2)!important;border-color:var(--green)!important}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{background:var(--green)!important;border-color:var(--green)!important;color:#0D0D0D!important;font-weight:600!important}
+.flatpickr-day.today{border-color:var(--green)!important}
+.flatpickr-day.prevMonthDay,.flatpickr-day.nextMonthDay{color:var(--muted)!important}
+.flatpickr-input.flatpickr-date+.form-input{cursor:pointer!important}
+.flatpickr-date~input.form-input{cursor:pointer!important}
 .form-textarea{resize:none;height:80px}
 .submit-btn{width:100%;padding:0.85rem;border-radius:12px;background:var(--green);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.2s}
 .submit-btn:active{transform:scale(0.98);background:#27ae60}
@@ -365,7 +382,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="log-form">
 <h3>&#128203; Schedule Surprise Inspection</h3>
 <div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="insp-driver"></select></div>
-<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="insp-date"></div>
+<div class="form-group"><label class="form-label">Date</label><input type="text" class="form-input flatpickr-date" id="insp-date" placeholder="Select date..." readonly></div>
 <div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-input" id="insp-notes" placeholder="What to inspect..."></div>
 <button class="submit-btn blue" onclick="scheduleInspection()">Schedule Inspection</button>
 </div>
@@ -457,7 +474,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <option>Coaching Session</option><option>Review Check-In</option><option>Other</option>
 </select>
 </div>
-<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="log-date"></div>
+<div class="form-group"><label class="form-label">Date</label><input type="text" class="form-input flatpickr-date" id="log-date" placeholder="Select date..." readonly></div>
 <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="log-notes" placeholder="What happened?"></textarea></div>
 <div class="form-group">
 <label class="form-label">Photos</label>
@@ -471,7 +488,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="log-form">
 <h3>&#128667; Ride-Along Scorecard</h3>
 <div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="sc-driver"></select></div>
-<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="sc-date"></div>
+<div class="form-group"><label class="form-label">Date</label><input type="text" class="form-input flatpickr-date" id="sc-date" placeholder="Select date..." readonly></div>
 </div>
 <div class="score-total-bar">
 <div><div class="score-total-num" id="sc-total">0</div><div style="font-size:0.75rem;color:var(--muted);">/ 40 points</div></div>
@@ -502,7 +519,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <button class="disc-type-btn" onclick="selectDisc(this,'termination')">Termination</button>
 </div>
 </div>
-<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="disc-date"></div>
+<div class="form-group"><label class="form-label">Date</label><input type="text" class="form-input flatpickr-date" id="disc-date" placeholder="Select date..." readonly></div>
 <div class="form-group"><label class="form-label">Reason</label><textarea class="form-textarea" id="disc-reason" placeholder="Describe the incident..."></textarea></div>
 <div class="form-group">
 <label class="form-label">Evidence</label>
@@ -759,8 +776,21 @@ function initApp() {
   updateViewMonthLabel();
 }
 function setDates() {
-  const t = new Date().toISOString().split('T')[0];
-  ['log-date', 'sc-date', 'disc-date', 'insp-date'].forEach(id => { const el = document.getElementById(id); if (el) el.value = t; });
+  const today = new Date();
+  ['log-date', 'sc-date', 'disc-date', 'insp-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      flatpickr(el, {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'm/d/Y',
+        defaultDate: today,
+        theme: 'dark',
+        disableMobile: true,
+        animate: true
+      });
+    }
+  });
 }
 
 // ════════════════════════════════════════════
