@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ASL Driver Mgr">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230D0D0D' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' fill='%232ECC71' font-size='40' font-family='sans-serif' font-weight='bold'>ASL</text></svg>">
+<title>ASL Driver Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--green:#2ECC71;--yellow:#F1C40F;--red:#E74C3C;--orange:#E67E22;--blue:#3498DB;--purple:#9B59B6;--bg:#0D0D0D;--surface:#1A1A1A;--surface2:#252525;--border:#2E2E2E;--text:#F0F0F0;--muted:#777}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overscroll-behavior:none}
+.screen{display:none;min-height:100vh;flex-direction:column}.screen.active{display:flex}
+
+/* LOGIN */
+#login-screen{align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at 50% 0%,#1a3322 0%,#0D0D0D 60%)}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:3px;color:var(--green);margin-bottom:0.25rem}
+.login-sub{color:var(--muted);font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:3rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:340px}
+.login-title{font-size:1rem;font-weight:600;margin-bottom:0.5rem}
+.login-hint{font-size:0.8rem;color:var(--muted);margin-bottom:1.5rem}
+.user-select{display:flex;gap:0.5rem;margin-bottom:1.5rem}
+.user-btn{flex:1;padding:0.6rem 0.25rem;border-radius:8px;border:2px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.user-btn.selected{border-color:var(--green);color:var(--green);background:#1a2e1a}
+.pin-display{display:flex;gap:0.75rem;justify-content:center;margin-bottom:1.5rem}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all 0.2s}
+.pin-dot.filled{background:var(--green);border-color:var(--green)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem}
+.key{aspect-ratio:1;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:1.3rem;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.key:active{background:#2a2a2a;transform:scale(0.95)}
+.key.del{font-size:1rem;color:var(--muted)}
+.key.enter{background:var(--green);color:#000;font-weight:700;font-size:0.85rem}
+.key.enter:active{background:#27ae60}
+.login-error{color:var(--red);font-size:0.8rem;text-align:center;margin-top:1rem;min-height:1.2rem}
+
+/* APP */
+#app-screen{background:var(--bg)}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.25rem 0.75rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--green)}
+.topbar-user{font-size:0.72rem;color:var(--muted)}
+.logout-btn{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer}
+.content{flex:1;padding:1rem 1rem 6rem;overflow-y:auto}
+.tabs{display:flex;gap:0.5rem;margin-bottom:1.25rem;overflow-x:auto;padding-bottom:0.25rem}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;padding:0.5rem 1rem;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:0.8rem;font-weight:500;cursor:pointer;transition:all 0.2s;position:relative}
+.tab.active{background:var(--green);border-color:var(--green);color:#000;font-weight:700}
+.tab-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:0.6rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ALERTS */
+.alert-banner{border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.6rem;display:flex;align-items:flex-start;gap:0.75rem;cursor:pointer}
+.alert-banner.overdue{background:#2e1111;border:1px solid #5a2020}
+.alert-banner.due-today{background:#2e1a00;border:1px solid #5a3800}
+.alert-banner.due-week{background:#2e2800;border:1px solid #5a4e00}
+.alert-icon{font-size:1.2rem;flex-shrink:0;margin-top:0.1rem}
+.alert-body{flex:1}
+.alert-title{font-size:0.88rem;font-weight:600;margin-bottom:0.15rem}
+.alert-sub{font-size:0.75rem;color:var(--muted)}
+.alert-badge{font-size:0.7rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:0.15rem}
+.no-alerts{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:0.85rem}
+
+/* SCHEDULE */
+.schedule-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.schedule-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:1px}
+.month-nav{display:flex;align-items:center;gap:0.75rem}
+.month-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:8px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.month-label{font-size:0.85rem;font-weight:600;min-width:90px;text-align:center}
+.schedule-filter{display:flex;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap}
+.sf-btn{padding:0.35rem 0.75rem;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.2s}
+.sf-btn.active{border-color:var(--green);color:var(--green);background:#1a2e1a}
+.schedule-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.85rem}
+.schedule-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.schedule-info{flex:1}
+.schedule-name{font-weight:600;font-size:0.88rem}
+.schedule-type{font-size:0.75rem;color:var(--muted);margin-top:0.1rem}
+.schedule-date{font-size:0.78rem;font-weight:600;text-align:right;flex-shrink:0}
+.schedule-date.overdue{color:var(--red)}.schedule-date.soon{color:var(--yellow)}.schedule-date.ok{color:var(--muted)}
+
+/* ROSTER */
+.section-label{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:1rem 0 0.5rem}
+.driver-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all 0.2s}
+.driver-card:active{transform:scale(0.98)}
+.driver-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;flex-shrink:0;border:2px solid var(--border)}
+.driver-info{flex:1}
+.driver-name{font-weight:600;font-size:0.95rem;margin-bottom:0.15rem}
+.driver-role{font-size:0.75rem;color:var(--muted)}
+.driver-meta{display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap}
+.badge{font-size:0.65rem;font-weight:600;padding:0.2rem 0.45rem;border-radius:20px;white-space:nowrap}
+.badge-green{background:#1a3322;color:var(--green)}
+.badge-yellow{background:#2e2800;color:var(--yellow)}
+.badge-red{background:#2e1111;color:var(--red)}
+.driver-reviews{text-align:right;flex-shrink:0}
+.review-count{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--green);line-height:1}
+.review-label{font-size:0.65rem;color:var(--muted)}
+
+/* LEADERBOARD */
+.leaderboard-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1rem}
+.lb-header{padding:0.9rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem}
+.lb-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px}
+.lb-subtitle{font-size:0.72rem;color:var(--muted)}
+.sync-btn{padding:0.35rem 0.85rem;border-radius:8px;background:var(--green);color:#000;border:none;font-size:0.75rem;font-weight:700;cursor:pointer}
+.sync-btn:active{opacity:0.8}.sync-btn.loading{background:var(--border);color:var(--muted)}
+.lb-row{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+.lb-row:last-child{border-bottom:none}.lb-row:active{background:var(--surface2)}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;width:26px;text-align:center;flex-shrink:0}
+.rank-1{color:#FFD700}.rank-2{color:#C0C0C0}.rank-3{color:#CD7F32}
+.lb-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:0.85rem;flex-shrink:0}
+.lb-name-wrap{flex:1}.lb-name{font-size:0.9rem;font-weight:600}.lb-role{font-size:0.68rem;color:var(--muted)}
+.lb-bar-wrap{width:70px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.lb-bar{height:100%;border-radius:3px}
+.lb-count{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;width:30px;text-align:right;flex-shrink:0}
+.bonus-badge{background:#2e2800;color:var(--yellow);font-size:0.62rem;font-weight:700;padding:0.12rem 0.4rem;border-radius:10px;margin-left:0.3rem}
+.month-nav-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.month-nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:10px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.month-nav-label{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:1px}
+
+/* FORMS */
+.log-form{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+.log-form h3{font-size:0.95rem;font-weight:600;margin-bottom:1rem}
+.form-group{margin-bottom:0.9rem}
+.form-label{font-size:0.75rem;color:var(--muted);font-weight:500;margin-bottom:0.35rem;display:block}
+.form-select,.form-input,.form-textarea{width:100%;padding:0.65rem 0.85rem;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s}
+.form-select:focus,.form-input:focus,.form-textarea:focus{border-color:var(--green)}
+.form-textarea{resize:none;height:80px}
+.submit-btn{width:100%;padding:0.85rem;border-radius:12px;background:var(--green);color:#000;border:none;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.2s}
+.submit-btn:active{transform:scale(0.98);background:#27ae60}
+.submit-btn.danger{background:var(--red);color:#fff}
+.submit-btn.blue{background:var(--blue);color:#fff}
+
+/* PRIORITY */
+.priority-row{display:flex;gap:0.5rem;margin-bottom:0.9rem}
+.pri-btn{flex:1;padding:0.55rem;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s}
+.pri-btn.sel-high{border-color:var(--red);color:var(--red);background:#2e1111}
+.pri-btn.sel-medium{border-color:var(--yellow);color:var(--yellow);background:#2e2800}
+.pri-btn.sel-low{border-color:var(--green);color:var(--green);background:#1a2e1a}
+
+/* TO-DO */
+.todo-section-title{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:1rem 0 0.5rem;display:flex;align-items:center;justify-content:space-between}
+.todo-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1rem;margin-bottom:0.6rem;transition:all 0.2s}
+.todo-card.done{opacity:0.5}
+.todo-top{display:flex;align-items:flex-start;gap:0.75rem}
+.todo-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;margin-top:0.1rem}
+.todo-check.checked{background:var(--green);border-color:var(--green)}
+.todo-check.checked::after{content:'\2713';color:#000;font-size:0.75rem;font-weight:700}
+.todo-body{flex:1}
+.todo-title{font-size:0.9rem;font-weight:600;margin-bottom:0.2rem}
+.todo-title.done-text{text-decoration:line-through;color:var(--muted)}
+.todo-meta{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem;align-items:center}
+.pri-badge{font-size:0.65rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:10px}
+.pri-high{background:#2e1111;color:var(--red)}.pri-medium{background:#2e2800;color:var(--yellow)}.pri-low{background:#1a2e1a;color:var(--green)}
+.todo-assigned{font-size:0.68rem;color:var(--muted)}
+.todo-expand-btn{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0.35rem 0;display:block;margin-top:0.4rem}
+.todo-notes-area{margin-top:0.6rem;padding-top:0.6rem;border-top:1px solid var(--border)}
+.todo-note-entry{background:var(--surface2);border-radius:8px;padding:0.5rem 0.7rem;margin-bottom:0.4rem;font-size:0.78rem}
+.todo-note-meta{font-size:0.67rem;color:var(--muted);margin-bottom:0.15rem}
+.todo-note-input-row{display:flex;gap:0.5rem;margin-top:0.5rem}
+.todo-note-input-row input{flex:1;padding:0.5rem 0.7rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none}
+.todo-note-input-row button{padding:0.5rem 0.75rem;border-radius:8px;background:var(--green);color:#000;border:none;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap}
+.todo-completed-info{font-size:0.68rem;color:var(--green);margin-top:0.3rem}
+
+/* ROCKS */
+.quarter-selector{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.q-btn{padding:0.45rem 1rem;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.q-btn.active{background:var(--purple);border-color:var(--purple);color:#fff}
+.rock-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1rem;margin-bottom:0.6rem}
+.rock-top{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.6rem}
+.rock-icon{font-size:1.2rem;flex-shrink:0}
+.rock-title{font-weight:600;font-size:0.9rem;flex:1}
+.rock-meta{display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;margin-bottom:0.75rem}
+.rock-progress-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:0.5rem}
+.rock-progress-bar{height:100%;border-radius:3px;background:var(--purple);transition:width 0.4s}
+.rock-progress-label{font-size:0.72rem;color:var(--muted);display:flex;justify-content:space-between}
+.progress-btns{display:flex;gap:0.4rem;margin-top:0.6rem}
+.prog-btn{flex:1;padding:0.4rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.75rem;cursor:pointer;text-align:center;transition:all 0.2s}
+.prog-btn.active-prog{border-color:var(--purple);color:var(--purple);background:#1a0e2e}
+
+/* SCORECARD */
+.score-item{background:var(--surface2);border-radius:10px;padding:0.85rem;margin-bottom:0.6rem}
+.score-item-label{font-size:0.85rem;font-weight:500;margin-bottom:0.15rem}
+.score-item-desc{font-size:0.72rem;color:var(--muted);margin-bottom:0.65rem}
+.star-row{display:flex;gap:0.4rem}
+.star{font-size:1.5rem;cursor:pointer;transition:transform 0.1s;opacity:0.25}
+.star.active{opacity:1}.star:active{transform:scale(1.3)}
+.score-total-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem}
+.score-total-num{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1}
+.score-grade{font-size:0.8rem;font-weight:700;padding:0.3rem 0.75rem;border-radius:20px}
+
+/* DISCIPLINE */
+.disc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.9rem}
+.disc-type-btn{padding:0.65rem;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s}
+.disc-type-btn.selected-verbal{border-color:var(--yellow);color:var(--yellow);background:#2e2800}
+.disc-type-btn.selected-written{border-color:var(--orange);color:var(--orange);background:#2e1a00}
+.disc-type-btn.selected-suspension{border-color:var(--red);color:var(--red);background:#2e1111}
+.disc-type-btn.selected-termination{border-color:#8B0000;color:#ff4444;background:#1a0000}
+
+/* PHOTO */
+.photo-upload-area{border:2px dashed var(--border);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;margin-bottom:0.9rem}
+.photo-upload-icon{font-size:2rem;margin-bottom:0.4rem}
+.photo-upload-label{font-size:0.8rem;color:var(--muted)}
+.photo-preview-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.9rem}
+.photo-preview{position:relative}
+.photo-preview img{width:70px;height:70px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
+.photo-remove{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* LOG ENTRIES */
+.log-entry{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.6rem}
+.log-entry-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.3rem}
+.log-entry-name{font-weight:600;font-size:0.88rem}
+.log-entry-date{font-size:0.72rem;color:var(--muted)}
+.log-entry-type{font-size:0.72rem;margin-bottom:0.3rem}
+.log-entry-notes{font-size:0.8rem;color:var(--muted);font-style:italic}
+.log-photo-thumb{width:60px;height:60px;border-radius:8px;object-fit:cover;margin-top:0.5rem;border:1px solid var(--border);cursor:pointer}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:0.85rem}
+
+/* DRIVER MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;display:none;align-items:flex-end}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:1.5rem 1.25rem 3rem;max-height:92vh;overflow-y:auto;animation:slideUp 0.25s ease}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.5rem}
+.modal-driver-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem}
+.modal-avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;border:2px solid var(--border);flex-shrink:0}
+.modal-name{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:1px}
+.modal-role{font-size:0.78rem;color:var(--muted)}
+.modal-close{margin-left:auto;background:var(--surface2);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:1.25rem}
+.stat-box{background:var(--surface2);border-radius:10px;padding:0.65rem 0.4rem;text-align:center}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--green)}.stat-val.red{color:var(--red)}
+.stat-lbl{font-size:0.6rem;color:var(--muted);margin-top:0.1rem;line-height:1.2}
+.modal-tabs{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.modal-tab{padding:0.4rem 0.85rem;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s}
+.modal-tab.active{background:var(--green);border-color:var(--green);color:#000;font-weight:700}
+.modal-tab-panel{display:none}.modal-tab-panel.active{display:block}
+.note-entry{background:var(--surface2);border-radius:10px;padding:0.75rem;margin-bottom:0.6rem}
+.note-meta{font-size:0.7rem;color:var(--muted);margin-bottom:0.3rem}
+.note-text{font-size:0.85rem}
+.disc-entry{background:var(--surface2);border-radius:10px;padding:0.75rem;margin-bottom:0.6rem}
+.disc-entry.verbal{border-left:3px solid var(--yellow)}
+.disc-entry.written{border-left:3px solid var(--orange)}
+.disc-entry.suspension{border-left:3px solid var(--red)}
+.disc-entry.termination{border-left:3px solid #8B0000}
+.scorecard-entry{background:var(--surface2);border-radius:10px;padding:0.75rem;margin-bottom:0.6rem}
+.sc-entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem}
+.sc-score-pill{font-family:'Bebas Neue',sans-serif;font-size:1rem;padding:0.2rem 0.6rem;border-radius:20px}
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:0.5rem}
+.photos-grid img{width:100%;aspect-ratio:1;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer}
+.edit-reviews-row{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem}
+.edit-reviews-row input{flex:1}
+.save-btn-sm{padding:0.55rem 1rem;border-radius:8px;background:var(--green);color:#000;border:none;font-weight:700;font-size:0.85rem;cursor:pointer;white-space:nowrap}
+
+/* REVIEW PROFILE MODAL */
+.review-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:300;display:none;align-items:flex-end}
+.review-modal-overlay.open{display:flex}
+.review-modal{background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:1.5rem 1.25rem 3rem;max-height:92vh;overflow-y:auto;animation:slideUp 0.25s ease}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1.25rem}
+.stat-card{background:var(--surface2);border-radius:12px;padding:0.9rem 0.75rem;text-align:center}
+.stat-card.highlight{border:1px solid #2ECC7144;background:#0d1a0d}
+.stat-card-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;color:var(--green)}
+.stat-card-val.gold{color:#FFD700}
+.stat-card-lbl{font-size:0.68rem;color:var(--muted);margin-top:0.25rem;text-transform:uppercase;letter-spacing:1px}
+.stat-card-sub{font-size:0.72rem;color:var(--muted);margin-top:0.15rem}
+.chart-title{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:0.85rem}
+.bar-chart{display:flex;align-items:flex-end;gap:0.35rem;height:100px;padding:0 0.25rem;margin-bottom:0.5rem}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.25rem}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;min-height:2px}
+.bar-label{font-size:0.55rem;color:var(--muted);white-space:nowrap}
+.bar-val{font-size:0.6rem;color:var(--muted)}
+.best-month-card{background:linear-gradient(135deg,#2e2800,#1a1a00);border:1px solid #5a4e0033;border-radius:12px;padding:0.85rem 1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem}
+.fp-row{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border)}
+.fp-row:last-child{border-bottom:none}
+.fp-month{font-size:0.82rem;font-weight:500}
+.fp-count{font-size:0.82rem;color:var(--yellow);font-weight:700}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:500;display:none;align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lightbox img{max-width:95vw;max-height:90vh;border-radius:8px;object-fit:contain}
+.lightbox-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer}
+
+/* Loading overlay */
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:1rem}
+.loading-overlay.show{display:flex}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--muted);font-size:0.85rem}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+<div class="loading-spinner"></div>
+<div class="loading-text" id="loading-text">Loading...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+<div class="login-logo">ASL</div>
+<div class="login-sub">Driver Manager</div>
+<div class="login-card">
+<div class="login-title">Select User</div>
+<div class="login-hint">Choose your name, then enter your PIN</div>
+<div class="user-select">
+<button class="user-btn" data-user="David" onclick="selectUser(this)">David</button>
+<button class="user-btn" data-user="Clint" onclick="selectUser(this)">Clint</button>
+<button class="user-btn" data-user="Dustin" onclick="selectUser(this)">Dustin</button>
+</div>
+<div class="pin-display">
+<div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+<div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+</div>
+<div class="keypad">
+<button class="key" onclick="pinKey('1')">1</button><button class="key" onclick="pinKey('2')">2</button><button class="key" onclick="pinKey('3')">3</button>
+<button class="key" onclick="pinKey('4')">4</button><button class="key" onclick="pinKey('5')">5</button><button class="key" onclick="pinKey('6')">6</button>
+<button class="key" onclick="pinKey('7')">7</button><button class="key" onclick="pinKey('8')">8</button><button class="key" onclick="pinKey('9')">9</button>
+<button class="key del" onclick="pinDel()">&#9003;</button><button class="key" onclick="pinKey('0')">0</button><button class="key enter" onclick="pinEnter()">GO</button>
+</div>
+<div class="login-error" id="login-error"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="screen">
+<div class="topbar">
+<div><div class="topbar-title">ASL Driver Manager</div><div class="topbar-user" id="topbar-user"></div></div>
+<button class="logout-btn" onclick="logout()">Sign Out</button>
+</div>
+<div class="content">
+<div class="tabs">
+<button class="tab active" onclick="switchTab('alerts',this)">&#128276; Alerts</button>
+<button class="tab" onclick="switchTab('schedule',this)">&#128197; Schedule</button>
+<button class="tab" onclick="switchTab('todos',this)" id="tab-btn-todos">&#9989; To-Dos</button>
+<button class="tab" onclick="switchTab('rocks',this)">&#129704; Rocks</button>
+<button class="tab" onclick="switchTab('roster',this)">Roster</button>
+<button class="tab" onclick="switchTab('leaderboard',this)">Reviews</button>
+<button class="tab" onclick="switchTab('log-activity',this)">Log</button>
+<button class="tab" onclick="switchTab('history',this)">History</button>
+</div>
+
+<!-- ALERTS -->
+<div class="tab-panel active" id="tab-alerts"><div id="alerts-container"></div></div>
+
+<!-- SCHEDULE -->
+<div class="tab-panel" id="tab-schedule">
+<div class="schedule-header">
+<div class="schedule-title">Upcoming Tasks</div>
+<div class="month-nav">
+<button onclick="changeSchedMonth(-1)">&#8249;</button>
+<div class="month-label" id="sched-month-label"></div>
+<button onclick="changeSchedMonth(1)">&#8250;</button>
+</div>
+</div>
+<div class="schedule-filter">
+<button class="sf-btn active" onclick="filterSchedule('all',this)">All</button>
+<button class="sf-btn" onclick="filterSchedule('Review',this)">Reviews</button>
+<button class="sf-btn" onclick="filterSchedule('Ride-Along',this)">Ride-Alongs</button>
+<button class="sf-btn" onclick="filterSchedule('Inspection',this)">Inspections</button>
+<button class="sf-btn" onclick="filterSchedule('Coaching',this)">Coaching</button>
+</div>
+<div id="inspection-scheduler" style="display:none;">
+<div class="log-form">
+<h3>&#128203; Schedule Surprise Inspection</h3>
+<div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="insp-driver"></select></div>
+<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="insp-date"></div>
+<div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-input" id="insp-notes" placeholder="What to inspect..."></div>
+<button class="submit-btn blue" onclick="scheduleInspection()">Schedule Inspection</button>
+</div>
+</div>
+<div id="schedule-list"></div>
+</div>
+
+<!-- TO-DOS -->
+<div class="tab-panel" id="tab-todos">
+<div class="log-form" id="todo-add-form">
+<h3 id="todo-form-title">Add To-Do</h3>
+<div class="form-group"><label class="form-label">Task</label><input type="text" class="form-input" id="todo-title" placeholder="What needs to be done?"></div>
+<div class="form-group">
+<label class="form-label">Priority</label>
+<div class="priority-row">
+<button class="pri-btn" onclick="selectPri(this,'high')">&#128308; High</button>
+<button class="pri-btn" onclick="selectPri(this,'medium')">&#128993; Medium</button>
+<button class="pri-btn" onclick="selectPri(this,'low')">&#128994; Low</button>
+</div>
+</div>
+<button class="submit-btn" onclick="addTodo()">Add To-Do</button>
+</div>
+<div class="todo-section-title"><span>&#128204; Open</span><span id="open-count" style="color:var(--muted);font-size:0.75rem;"></span></div>
+<div id="todos-open"></div>
+<div class="todo-section-title" style="margin-top:1.5rem;"><span>&#9989; Completed</span></div>
+<div id="todos-done"></div>
+</div>
+
+<!-- QUARTERLY ROCKS -->
+<div class="tab-panel" id="tab-rocks">
+<div class="quarter-selector" id="quarter-selector">
+<button class="q-btn" onclick="selectQuarter('Q1',this)">Q1</button>
+<button class="q-btn" onclick="selectQuarter('Q2',this)">Q2</button>
+<button class="q-btn" onclick="selectQuarter('Q3',this)">Q3</button>
+<button class="q-btn" onclick="selectQuarter('Q4',this)">Q4</button>
+</div>
+<div class="log-form">
+<h3>&#129704; Add Quarterly Rock</h3>
+<div class="form-group"><label class="form-label">Rock / Goal</label><input type="text" class="form-input" id="rock-title" placeholder="e.g. All drivers complete Q3 ride-along"></div>
+<div class="form-group">
+<label class="form-label">Priority</label>
+<div class="priority-row">
+<button class="pri-btn" onclick="selectRockPri(this,'high')">&#128308; High</button>
+<button class="pri-btn" onclick="selectRockPri(this,'medium')">&#128993; Medium</button>
+<button class="pri-btn" onclick="selectRockPri(this,'low')">&#128994; Low</button>
+</div>
+</div>
+<button class="submit-btn" onclick="addRock()">Add Rock</button>
+</div>
+<div id="rocks-list"></div>
+</div>
+
+<!-- ROSTER -->
+<div class="tab-panel" id="tab-roster">
+<div class="section-label">Dumpster Drivers</div><div id="dump-roster"></div>
+<div class="section-label">Fence Crew</div><div id="fence-roster"></div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="tab-panel" id="tab-leaderboard">
+<div class="month-nav-bar">
+<button class="month-nav-btn" onclick="changeViewMonth(-1)">&#8249;</button>
+<div class="month-nav-label" id="view-month-label"></div>
+<button class="month-nav-btn" onclick="changeViewMonth(1)">&#8250;</button>
+</div>
+<div class="leaderboard-card">
+<div class="lb-header">
+<div><div class="lb-title">&#11088; Monthly Leaderboard</div><div class="lb-subtitle">Tap a driver to see full review history</div></div>
+<button class="sync-btn" id="sync-btn" onclick="doSync()" style="display:none;">&#8635; Sync</button>
+</div>
+<div id="lb-rows"></div>
+</div>
+<div style="font-size:0.72rem;color:var(--muted);text-align:center;" id="sync-status-label">Google Sheets sync available</div>
+</div>
+
+<!-- LOG ACTIVITY -->
+<div class="tab-panel" id="tab-log-activity">
+<div class="tabs" id="log-subtabs">
+<button class="tab active" onclick="switchLogTab('general',this)">General</button>
+<button class="tab" onclick="switchLogTab('scorecard',this)">Scorecard</button>
+<button class="tab" onclick="switchLogTab('discipline',this)">Discipline</button>
+</div>
+<div id="logtab-general" class="log-form">
+<h3>Log an Activity</h3>
+<div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="log-driver"></select></div>
+<div class="form-group"><label class="form-label">Activity Type</label>
+<select class="form-select" id="log-type">
+<option>Ride-Along</option><option>Performance Review</option>
+<option>Coaching Session</option><option>Review Check-In</option><option>Other</option>
+</select>
+</div>
+<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="log-date"></div>
+<div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="log-notes" placeholder="What happened?"></textarea></div>
+<div class="form-group">
+<label class="form-label">Photos</label>
+<div class="photo-upload-area" onclick="document.getElementById('log-photo-input').click()"><div class="photo-upload-icon">&#128247;</div><div class="photo-upload-label">Tap to add photos</div></div>
+<input type="file" id="log-photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(event,'log-previews','log')">
+<div class="photo-preview-row" id="log-previews"></div>
+</div>
+<button class="submit-btn" onclick="logActivity()">Save Activity</button>
+</div>
+<div id="logtab-scorecard" style="display:none;">
+<div class="log-form">
+<h3>&#128667; Ride-Along Scorecard</h3>
+<div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="sc-driver"></select></div>
+<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="sc-date"></div>
+</div>
+<div class="score-total-bar">
+<div><div class="score-total-num" id="sc-total">0</div><div style="font-size:0.75rem;color:var(--muted);">/ 40 points</div></div>
+<div style="flex:1"><div class="score-grade" id="sc-grade" style="background:#2e2e2e;color:var(--muted)">Not Started</div></div>
+</div>
+<div id="scorecard-items"></div>
+<div class="log-form" style="margin-top:0.75rem;">
+<div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="sc-notes" placeholder="Observations..."></textarea></div>
+<div class="form-group">
+<label class="form-label">Photos</label>
+<div class="photo-upload-area" onclick="document.getElementById('sc-photo-input').click()"><div class="photo-upload-icon">&#128247;</div><div class="photo-upload-label">Tap to add</div></div>
+<input type="file" id="sc-photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(event,'sc-previews','sc')">
+<div class="photo-preview-row" id="sc-previews"></div>
+</div>
+<button class="submit-btn" onclick="saveScorecard()">Save Scorecard</button>
+</div>
+</div>
+<div id="logtab-discipline" style="display:none;">
+<div class="log-form">
+<h3>&#9888;&#65039; Discipline Action</h3>
+<div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="disc-driver"></select></div>
+<div class="form-group">
+<label class="form-label">Action Type</label>
+<div class="disc-type-grid">
+<button class="disc-type-btn" onclick="selectDisc(this,'verbal')">Verbal Warning</button>
+<button class="disc-type-btn" onclick="selectDisc(this,'written')">Written Warning</button>
+<button class="disc-type-btn" onclick="selectDisc(this,'suspension')">Suspension</button>
+<button class="disc-type-btn" onclick="selectDisc(this,'termination')">Termination</button>
+</div>
+</div>
+<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="disc-date"></div>
+<div class="form-group"><label class="form-label">Reason</label><textarea class="form-textarea" id="disc-reason" placeholder="Describe the incident..."></textarea></div>
+<div class="form-group">
+<label class="form-label">Evidence</label>
+<div class="photo-upload-area" onclick="document.getElementById('disc-photo-input').click()"><div class="photo-upload-icon">&#128206;</div><div class="photo-upload-label">Tap to attach</div></div>
+<input type="file" id="disc-photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(event,'disc-previews','disc')">
+<div class="photo-preview-row" id="disc-previews"></div>
+</div>
+<button class="submit-btn danger" onclick="saveDiscipline()">Save Discipline Record</button>
+</div>
+</div>
+</div>
+
+<!-- HISTORY -->
+<div class="tab-panel" id="tab-history">
+<div class="form-group" style="margin-bottom:1rem;"><select class="form-select" id="history-filter" onchange="renderHistory()"><option value="all">All Drivers</option></select></div>
+<div id="history-list"></div>
+</div>
+</div>
+</div>
+
+<!-- DRIVER DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalBg(event)">
+<div class="modal">
+<div class="modal-handle"></div>
+<div class="modal-driver-header">
+<div class="modal-avatar" id="modal-avatar"></div>
+<div><div class="modal-name" id="modal-name"></div><div class="modal-role" id="modal-role"></div></div>
+<button class="modal-close" onclick="closeModalDirect()">&#10005;</button>
+</div>
+<div class="stat-grid">
+<div class="stat-box"><div class="stat-val" id="stat-reviews">0</div><div class="stat-lbl">Reviews This Month</div></div>
+<div class="stat-box"><div class="stat-val" id="stat-ridealongs">0</div><div class="stat-lbl">Ride-Alongs</div></div>
+<div class="stat-box"><div class="stat-val" id="stat-avgsc">&mdash;</div><div class="stat-lbl">Avg Score</div></div>
+<div class="stat-box"><div class="stat-val red" id="stat-disc">0</div><div class="stat-lbl">Discipline</div></div>
+</div>
+<div class="modal-tabs">
+<button class="modal-tab active" onclick="switchModalTab('overview',this)">Overview</button>
+<button class="modal-tab" onclick="switchModalTab('scorecards',this)">Scorecards</button>
+<button class="modal-tab" onclick="switchModalTab('discipline',this)">Discipline</button>
+<button class="modal-tab" onclick="switchModalTab('notes',this)">Notes</button>
+<button class="modal-tab" onclick="switchModalTab('photos',this)">Photos</button>
+</div>
+<div class="modal-tab-panel active" id="mtab-overview">
+<div class="form-label" style="margin-bottom:0.4rem;">Reviews This Month</div>
+<div class="edit-reviews-row"><input type="number" class="form-input" id="review-input" min="0"><button class="save-btn-sm" onclick="saveReviews()">Save</button></div>
+<div class="form-label" style="margin-bottom:0.4rem;">Recent Activity</div>
+<div id="modal-recent"></div>
+</div>
+<div class="modal-tab-panel" id="mtab-scorecards"><div id="modal-scorecards"></div></div>
+<div class="modal-tab-panel" id="mtab-discipline"><div id="modal-discipline"></div></div>
+<div class="modal-tab-panel" id="mtab-notes">
+<div class="form-group"><textarea class="form-textarea" id="note-input" placeholder="Add a note..."></textarea></div>
+<button class="save-btn-sm" style="width:100%;margin-bottom:1rem;" onclick="saveNote()">Add Note</button>
+<div id="modal-notes"></div>
+</div>
+<div class="modal-tab-panel" id="mtab-photos">
+<div class="photos-grid" id="modal-photos"></div>
+<div id="modal-photos-empty" class="empty-state" style="display:none;">No photos yet.</div>
+</div>
+</div>
+</div>
+
+<!-- REVIEW PROFILE MODAL -->
+<div class="review-modal-overlay" id="review-modal-overlay" onclick="closeReviewModalBg(event)">
+<div class="review-modal">
+<div class="modal-handle"></div>
+<div class="modal-driver-header">
+<div class="modal-avatar" id="rev-avatar"></div>
+<div><div class="modal-name" id="rev-name"></div><div class="modal-role" id="rev-role"></div></div>
+<button class="modal-close" onclick="closeReviewModal()">&#10005;</button>
+</div>
+<div class="stat-row">
+<div class="stat-card highlight"><div class="stat-card-val" id="rev-this-month">0</div><div class="stat-card-lbl">This Month</div><div class="stat-card-sub" id="rev-rank"></div></div>
+<div class="stat-card"><div class="stat-card-val" id="rev-ytd">0</div><div class="stat-card-lbl">This Year</div></div>
+<div class="stat-card"><div class="stat-card-val" id="rev-lifetime">0</div><div class="stat-card-lbl">Lifetime</div></div>
+<div class="stat-card"><div class="stat-card-val gold" id="rev-wins">0</div><div class="stat-card-lbl">&#127942; #1 Wins</div></div>
+</div>
+<div class="best-month-card" id="rev-best-card" style="display:none;">
+<div style="font-size:1.5rem;">&#128293;</div>
+<div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--yellow);" id="rev-best-val"></div><div style="font-size:0.72rem;color:var(--muted);" id="rev-best-lbl"></div></div>
+</div>
+<div class="chart-title">Reviews &mdash; Last 12 Months</div>
+<div class="bar-chart" id="rev-chart"></div>
+<div style="display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+<div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;color:var(--muted);"><div style="width:10px;height:10px;border-radius:2px;background:var(--green)"></div>Current</div>
+<div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;color:var(--muted);"><div style="width:10px;height:10px;border-radius:2px;background:#FFD700"></div>Won</div>
+<div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;color:var(--muted);"><div style="width:10px;height:10px;border-radius:2px;background:#2ECC7155"></div>Past</div>
+</div>
+<div class="chart-title" style="margin-bottom:0.6rem;">&#127942; Monthly #1 History</div>
+<div id="rev-fp-list"></div>
+</div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+<button class="lightbox-close">&#10005;</button>
+<img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'https://uktouiprlyuuwpumbgpu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrdG91aXBybHl1dXdwdW1iZ3B1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTI3OTIsImV4cCI6MjA4OTA4ODc5Mn0.aio1yQU6vag3pnBawsGJh-wXQ69QCjFfwJvWAMWv5C0';
+const SHEETS_ID = '16ckyhL1CZTRrk7T2puPPuMiB1HBHiD65ooBRszw4bfU';
+const DRIVER_TABS = [
+  { name: 'Drivers SEPTEMBER', month: '2025-09' },
+  { name: 'Drivers OCTOBER', month: '2025-10' },
+  { name: 'Drivers NOVEMBER', month: '2025-11' },
+  { name: 'Drivers DECEMBER', month: '2025-12' },
+  { name: 'Drivers JAN', month: '2026-01' },
+  { name: 'Drivers FEB', month: '2026-02' },
+  { name: 'Drivers March', month: '2026-03' }
+];
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════
+const PINS = { David: '2010', Clint: '2020', Dustin: '5150' };
+let DRIVERS = [];
+const SCORECARD_METRICS = [
+  { key: 'professionalism', label: 'Professionalism', desc: 'Uniform, appearance, attitude with customer' },
+  { key: 'safety', label: 'Safety', desc: 'Driving habits, backing, spotting, PPE' },
+  { key: 'customer', label: 'Customer Interaction', desc: 'Greeting, communication, leaves good impression' },
+  { key: 'placement', label: 'Placement Accuracy', desc: 'Dumpster positioned correctly, gate clearance, surface protection' },
+  { key: 'route', label: 'Route Efficiency', desc: 'Organized stops, no unnecessary delays' },
+  { key: 'reviewask', label: 'Review Ask', desc: 'Did they ask the customer for a Google review?' },
+  { key: 'truck', label: 'Truck Condition', desc: 'Cab cleanliness, pre-trip habits' },
+  { key: 'documentation', label: 'Documentation', desc: 'Photos taken, notes in Docket, issues reported' },
+];
+const TYPE_COLORS = { 'Ride-Along': '#2ECC71', 'Performance Review': '#3498DB', 'Coaching Session': '#E67E22', 'Review Check-In': '#9B59B6', 'Discipline': '#E74C3C', 'Scorecard': '#1ABC9C', 'Inspection': '#00BCD4', Other: '#888' };
+const CADENCE = { 'Performance Review': 180, 'Ride-Along': 90, 'Review Check-In': 30 };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const ROCK_STATUSES = ['Not Started', 'On Track', 'At Risk', 'Complete'];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let selectedUser = null, pinEntry = '';
+let schedViewDate = new Date(), schedFilter = 'all';
+let reviewViewDate = new Date();
+let currentQuarter = 'Q1';
+let selectedPri = 'medium', selectedRockPri = 'medium', selectedDiscType = null;
+let currentDriverId = null;
+const pendingPhotos = { log: [], sc: [], disc: [] };
+const scScores = {};
+
+// In-memory cache for Supabase data
+let cache = { activities: [], scorecards: [], discipline: [], inspections: [], reviews: [], driver_notes: [], todos: [], rocks: [] };
+
+// ════════════════════════════════════════════
+// SUPABASE HELPERS
+// ════════════════════════════════════════════
+function showLoading(msg) { document.getElementById('loading-text').textContent = msg || 'Loading...'; document.getElementById('loading-overlay').classList.add('show'); }
+function hideLoading() { document.getElementById('loading-overlay').classList.remove('show'); }
+
+async function loadAllData() {
+  const [a, s, d, i, r, n, t, ro] = await Promise.all([
+    sb.from('activities').select('*').order('logged_at', { ascending: false }),
+    sb.from('scorecards').select('*').order('logged_at', { ascending: false }),
+    sb.from('discipline').select('*').order('logged_at', { ascending: false }),
+    sb.from('inspections').select('*').order('scheduled_at', { ascending: false }),
+    sb.from('reviews').select('*'),
+    sb.from('driver_notes').select('*').order('created_at', { ascending: false }),
+    sb.from('todos').select('*').order('created_at', { ascending: false }),
+    sb.from('rocks').select('*').order('created_at', { ascending: false }),
+  ]);
+  cache.activities = a.data || [];
+  cache.scorecards = s.data || [];
+  cache.discipline = d.data || [];
+  cache.inspections = i.data || [];
+  cache.reviews = r.data || [];
+  cache.driver_notes = n.data || [];
+  cache.todos = t.data || [];
+  cache.rocks = ro.data || [];
+}
+
+function getReviewCount(driverId, month) {
+  const rec = cache.reviews.find(r => r.driver_id === driverId && r.month === month);
+  return rec ? rec.count : 0;
+}
+
+function getAllReviewsForDriver(driverId) {
+  const map = {};
+  cache.reviews.filter(r => r.driver_id === driverId).forEach(r => { map[r.month] = r.count; });
+  return map;
+}
+
+// ════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════
+function selectUser(btn) {
+  document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedUser = btn.dataset.user;
+  pinEntry = '';
+  updateDots();
+  document.getElementById('login-error').textContent = '';
+}
+function pinKey(k) {
+  if (!selectedUser) { document.getElementById('login-error').textContent = 'Select your name first.'; return; }
+  if (pinEntry.length >= 4) return;
+  pinEntry += k;
+  updateDots();
+  if (pinEntry.length === 4) setTimeout(pinEnter, 100);
+}
+function pinDel() { pinEntry = pinEntry.slice(0, -1); updateDots(); }
+function updateDots() { for (let i = 0; i < 4; i++) document.getElementById('d' + i).classList.toggle('filled', i < pinEntry.length); }
+
+async function pinEnter() {
+  if (!selectedUser) { document.getElementById('login-error').textContent = 'Select your name.'; return; }
+  if (PINS[selectedUser] === pinEntry) {
+    showLoading('Loading data...');
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('app-screen').classList.add('active');
+    document.getElementById('topbar-user').textContent = 'Logged in as ' + selectedUser;
+    // Load drivers from Supabase
+    const { data: drivers } = await sb.from('drivers').select('*').order('id');
+    DRIVERS = drivers || [];
+    await loadAllData();
+    hideLoading();
+    initApp();
+  } else {
+    document.getElementById('login-error').textContent = 'Incorrect PIN.';
+    pinEntry = '';
+    updateDots();
+  }
+}
+function logout() {
+  selectedUser = null; pinEntry = ''; updateDots();
+  document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('login-screen').classList.add('active');
+}
+
+// ════════════════════════════════════════════
+// INIT APP
+// ════════════════════════════════════════════
+function initApp() {
+  populateForms(); buildScorecard(); setDates();
+  renderAlerts(); renderSchedule(); renderRoster(); renderLeaderboard();
+  renderHistory(); renderTodos(); renderRocks();
+  document.getElementById('sync-btn').style.display = selectedUser === 'Dustin' ? 'block' : 'none';
+  document.getElementById('inspection-scheduler').style.display = (selectedUser === 'Clint' || selectedUser === 'Dustin') ? 'block' : 'none';
+  const q = 'Q' + Math.ceil((new Date().getMonth() + 1) / 3);
+  const qBtn = document.querySelector(`[onclick="selectQuarter('${q}',this)"]`);
+  if (qBtn) selectQuarter(q, qBtn);
+  reviewViewDate = new Date();
+  updateViewMonthLabel();
+}
+function setDates() {
+  const t = new Date().toISOString().split('T')[0];
+  ['log-date', 'sc-date', 'disc-date', 'insp-date'].forEach(id => { const el = document.getElementById(id); if (el) el.value = t; });
+}
+
+// ════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.content>.tabs>.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+function switchLogTab(name, btn) {
+  document.querySelectorAll('#log-subtabs .tab').forEach(t => t.classList.remove('active'));
+  ['general', 'scorecard', 'discipline'].forEach(n => { const el = document.getElementById('logtab-' + n); if (el) el.style.display = 'none'; });
+  btn.classList.add('active');
+  document.getElementById('logtab-' + name).style.display = 'block';
+}
+function switchModalTab(name, btn) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mtab-' + name).classList.add('active');
+}
+
+// ════════════════════════════════════════════
+// SCHEDULE ENGINE
+// ════════════════════════════════════════════
+function changeSchedMonth(d) { schedViewDate = new Date(schedViewDate.getFullYear(), schedViewDate.getMonth() + d, 1); renderSchedule(); }
+function filterSchedule(f, btn) { document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); schedFilter = f; renderSchedule(); }
+
+function getLastCompleted(driverId, type) {
+  let items = type === 'Ride-Along'
+    ? [...cache.activities.filter(a => a.driver_id === driverId && (a.type === 'Ride-Along' || a.type === 'Scorecard')), ...cache.scorecards.filter(s => s.driver_id === driverId)]
+    : cache.activities.filter(a => a.driver_id === driverId && a.type === type);
+  if (!items.length) return null;
+  return items.map(a => a.date).filter(Boolean).sort().reverse()[0];
+}
+function getDueDate(driverId, type) {
+  const last = getLastCompleted(driverId, type);
+  const days = CADENCE[type]; if (!days) return null;
+  const base = last ? new Date(last + 'T00:00:00') : new Date();
+  const due = new Date(base); due.setDate(due.getDate() + days); return due;
+}
+function daysUntil(date) { const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((date - t) / 86400000); }
+
+function buildScheduleItems() {
+  const items = [];
+  DRIVERS.forEach(dr => {
+    ['Performance Review', 'Ride-Along', 'Review Check-In'].forEach(type => {
+      const due = getDueDate(dr.id, type);
+      if (due) items.push({ driverId: dr.id, driverName: dr.name, type, dueDate: due, color: TYPE_COLORS[type] || '#888' });
+    });
+    const discCount = cache.discipline.filter(dc => dc.driver_id === dr.id).length;
+    const lowScore = cache.scorecards.filter(s => s.driver_id === dr.id && s.total < 25).length;
+    if (discCount > 0 || lowScore > 0) {
+      const lastCoach = cache.activities.filter(a => a.driver_id === dr.id && a.type === 'Coaching Session').sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
+      const due = lastCoach ? new Date(new Date(lastCoach.date + 'T00:00:00').getTime() + 30 * 86400000) : new Date();
+      items.push({ driverId: dr.id, driverName: dr.name, type: 'Coaching', dueDate: due, color: '#E67E22', auto: true });
+    }
+  });
+  cache.inspections.forEach(ins => {
+    const dr = DRIVERS.find(x => x.id === ins.driver_id);
+    if (dr) items.push({ driverId: ins.driver_id, driverName: dr.name, type: 'Inspection', dueDate: new Date(ins.date + 'T00:00:00'), color: '#00BCD4', notes: ins.notes, scheduledBy: ins.scheduled_by });
+  });
+  return items;
+}
+
+function renderAlerts() {
+  const items = buildScheduleItems();
+  const alerts = items.filter(i => daysUntil(i.dueDate) <= 7).sort((a, b) => a.dueDate - b.dueDate);
+  const c = document.getElementById('alerts-container');
+  const tb = document.getElementById('tab-btn-todos');
+  const openTodos = cache.todos.filter(t => !t.done).length;
+  if (openTodos > 0) { let b = tb.querySelector('.tab-badge'); if (!b) { b = document.createElement('div'); b.className = 'tab-badge'; tb.appendChild(b); } b.textContent = openTodos; }
+  else { const b = tb.querySelector('.tab-badge'); if (b) b.remove(); }
+  if (!alerts.length) { c.innerHTML = '<div class="no-alerts">&#9989; All clear &mdash; no tasks due in the next 7 days.</div>'; return; }
+  c.innerHTML = alerts.map(item => {
+    const days = daysUntil(item.dueDate);
+    let cls, icon, urgency;
+    if (days < 0) { cls = 'overdue'; icon = '&#128308;'; urgency = `Overdue ${Math.abs(days)}d`; }
+    else if (days <= 1) { cls = 'due-today'; icon = '&#128992;'; urgency = days === 0 ? 'Due TODAY' : 'Due TOMORROW'; }
+    else { cls = 'due-week'; icon = '&#128993;'; urgency = `Due in ${days}d`; }
+    const bc = days < 0 ? '#E74C3C' : days <= 1 ? '#E67E22' : '#F1C40F';
+    return `<div class="alert-banner ${cls}"><div class="alert-icon">${icon}</div><div class="alert-body"><div class="alert-title">${item.driverName} &mdash; ${item.type}</div><div class="alert-sub">${item.notes || ''}${item.auto ? ' (auto-triggered)' : ''}</div></div><div class="alert-badge" style="background:${bc}22;color:${bc}">${urgency}</div></div>`;
+  }).join('');
+}
+
+function renderSchedule() {
+  const yr = schedViewDate.getFullYear(), mo = schedViewDate.getMonth();
+  document.getElementById('sched-month-label').textContent = MONTHS[mo];
+  let items = buildScheduleItems().filter(i => i.dueDate.getFullYear() === yr && i.dueDate.getMonth() === mo);
+  if (schedFilter !== 'all') items = items.filter(i => i.type.includes(schedFilter));
+  items.sort((a, b) => a.dueDate - b.dueDate);
+  if (!items.length) { document.getElementById('schedule-list').innerHTML = '<div class="empty-state">No tasks this month.</div>'; return; }
+  document.getElementById('schedule-list').innerHTML = items.map(item => {
+    const days = daysUntil(item.dueDate);
+    const dc = days < 0 ? 'overdue' : days <= 7 ? 'soon' : 'ok';
+    const dl = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : formatDate(item.dueDate.toISOString().split('T')[0]);
+    return `<div class="schedule-item"><div class="schedule-dot" style="background:${item.color}"></div><div class="schedule-info"><div class="schedule-name">${item.driverName}</div><div class="schedule-type">${item.type}${item.auto ? ' &middot; Auto' : ''}</div></div><div class="schedule-date ${dc}">${dl}</div></div>`;
+  }).join('');
+}
+
+async function scheduleInspection() {
+  const driverId = parseInt(document.getElementById('insp-driver').value);
+  const date = document.getElementById('insp-date').value;
+  const notes = document.getElementById('insp-notes').value.trim();
+  if (!date) { alert('Select a date.'); return; }
+  await sb.from('inspections').insert({ driver_id: driverId, date, notes, scheduled_by: selectedUser });
+  await loadAllData();
+  document.getElementById('insp-notes').value = '';
+  alert('Inspection scheduled!');
+  renderSchedule(); renderAlerts();
+}
+
+// ════════════════════════════════════════════
+// TO-DOS
+// ════════════════════════════════════════════
+function selectPri(btn, val) { document.querySelectorAll('#tab-todos .priority-row .pri-btn').forEach(b => { b.className = 'pri-btn'; }); btn.classList.add('sel-' + val); selectedPri = val; }
+
+async function addTodo() {
+  const title = document.getElementById('todo-title').value.trim();
+  if (!title) { alert('Enter a task.'); return; }
+  await sb.from('todos').insert({ title, priority: selectedPri, created_by: selectedUser });
+  await loadAllData();
+  document.getElementById('todo-title').value = '';
+  renderTodos(); renderAlerts();
+}
+
+async function toggleTodo(id) {
+  const todo = cache.todos.find(t => t.id === id);
+  if (!todo) return;
+  const newDone = !todo.done;
+  await sb.from('todos').update({ done: newDone, completed_at: newDone ? new Date().toISOString() : null, completed_by: newDone ? selectedUser : null }).eq('id', id);
+  await loadAllData();
+  renderTodos(); renderAlerts();
+}
+
+async function addTodoNote(id) {
+  const input = document.getElementById('todo-note-input-' + id);
+  const text = input.value.trim(); if (!text) return;
+  const todo = cache.todos.find(t => t.id === id);
+  if (!todo) return;
+  const notes = todo.notes || [];
+  notes.push({ text, by: selectedUser, at: new Date().toISOString() });
+  await sb.from('todos').update({ notes }).eq('id', id);
+  await loadAllData();
+  input.value = '';
+  renderTodos();
+}
+
+function toggleTodoExpand(id) {
+  const el = document.getElementById('todo-expand-' + id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function renderTodos() {
+  const open = cache.todos.filter(t => !t.done).sort((a, b) => { const po = { high: 0, medium: 1, low: 2 }; return (po[a.priority] || 1) - (po[b.priority] || 1); });
+  const done = cache.todos.filter(t => t.done).sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
+  document.getElementById('open-count').textContent = open.length + ' task' + (open.length !== 1 ? 's' : '');
+  function renderTodoCard(t) {
+    const priClass = { high: 'pri-high', medium: 'pri-medium', low: 'pri-low' }[t.priority] || 'pri-medium';
+    const priLabel = { high: '&#128308; High', medium: '&#128993; Medium', low: '&#128994; Low' }[t.priority] || 'Medium';
+    const notes = t.notes || [];
+    return `<div class="todo-card ${t.done ? 'done' : ''}">
+      <div class="todo-top">
+        <div class="todo-check ${t.done ? 'checked' : ''}" onclick="toggleTodo('${t.id}')"></div>
+        <div class="todo-body">
+          <div class="todo-title ${t.done ? 'done-text' : ''}">${esc(t.title)}</div>
+          <div class="todo-meta"><span class="pri-badge ${priClass}">${priLabel}</span><span class="todo-assigned">Added by ${t.created_by || '?'}</span></div>
+          ${t.done && t.completed_at ? `<div class="todo-completed-info">&#10003; Completed ${formatDate(t.completed_at.split('T')[0])}</div>` : ''}
+          <button class="todo-expand-btn" onclick="toggleTodoExpand('${t.id}')">${notes.length ? notes.length + ' note' + (notes.length !== 1 ? 's' : '') : 'Add note'} &rsaquo;</button>
+        </div>
+      </div>
+      <div id="todo-expand-${t.id}" style="display:none;" class="todo-notes-area">
+        ${notes.map(n => `<div class="todo-note-entry"><div class="todo-note-meta">${n.by} &middot; ${formatDate(n.at?.split('T')[0])}</div>${esc(n.text)}</div>`).join('')}
+        <div class="todo-note-input-row"><input id="todo-note-input-${t.id}" placeholder="Add update note..." type="text"><button onclick="addTodoNote('${t.id}')">Add</button></div>
+      </div></div>`;
+  }
+  document.getElementById('todos-open').innerHTML = open.length ? open.map(renderTodoCard).join('') : '<div class="empty-state">No open to-dos. &#127881;</div>';
+  document.getElementById('todos-done').innerHTML = done.length ? done.map(renderTodoCard).join('') : '<div style="font-size:0.8rem;color:var(--muted);padding:0.5rem 0;">Nothing completed yet.</div>';
+}
+
+// ════════════════════════════════════════════
+// QUARTERLY ROCKS
+// ════════════════════════════════════════════
+function selectQuarter(q, btn) { currentQuarter = q; document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active')); if (btn) btn.classList.add('active'); renderRocks(); }
+function selectRockPri(btn, val) { document.querySelectorAll('#tab-rocks .priority-row .pri-btn').forEach(b => b.className = 'pri-btn'); btn.classList.add('sel-' + val); selectedRockPri = val; }
+
+async function addRock() {
+  const title = document.getElementById('rock-title').value.trim();
+  if (!title) { alert('Enter a rock title.'); return; }
+  await sb.from('rocks').insert({ title, priority: selectedRockPri, quarter: currentQuarter, year: new Date().getFullYear(), created_by: selectedUser, status: 0 });
+  await loadAllData();
+  document.getElementById('rock-title').value = '';
+  renderRocks();
+}
+
+async function setRockStatus(id, statusIdx) {
+  await sb.from('rocks').update({ status: statusIdx }).eq('id', id);
+  await loadAllData();
+  renderRocks();
+}
+
+function renderRocks() {
+  const yr = new Date().getFullYear();
+  const rocks = cache.rocks.filter(r => r.quarter === currentQuarter && r.year === yr).sort((a, b) => { const po = { high: 0, medium: 1, low: 2 }; return (po[a.priority] || 1) - (po[b.priority] || 1); });
+  const list = document.getElementById('rocks-list');
+  if (!rocks.length) { list.innerHTML = '<div class="empty-state">No rocks for ' + currentQuarter + ' yet.<br>Add your first goal above.</div>'; return; }
+  list.innerHTML = rocks.map(rock => {
+    const priClass = { high: 'pri-high', medium: 'pri-medium', low: 'pri-low' }[rock.priority] || 'pri-medium';
+    const priLabel = { high: '&#128308; High', medium: '&#128993; Medium', low: '&#128994; Low' }[rock.priority] || 'Medium';
+    const statusPct = [0, 33, 66, 100][rock.status];
+    const barColor = rock.status === 3 ? 'var(--green)' : rock.status === 2 ? 'var(--yellow)' : rock.status === 1 ? '#8BC34A' : 'var(--purple)';
+    return `<div class="rock-card">
+      <div class="rock-top"><div class="rock-icon">&#129704;</div><div class="rock-title">${esc(rock.title)}</div></div>
+      <div class="rock-meta"><span class="pri-badge ${priClass}">${priLabel}</span><span style="font-size:0.68rem;color:var(--muted);">by ${rock.created_by || '?'}</span></div>
+      <div class="rock-progress-wrap"><div class="rock-progress-bar" style="width:${statusPct}%;background:${barColor}"></div></div>
+      <div class="rock-progress-label"><span>${statusPct}%</span><span>${currentQuarter} ${yr}</span></div>
+      <div class="progress-btns">${ROCK_STATUSES.map((s, i) => `<button class="prog-btn ${rock.status === i ? 'active-prog' : ''}" onclick="setRockStatus('${rock.id}',${i})">${s}</button>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+// ROSTER
+// ════════════════════════════════════════════
+function renderRoster() {
+  const month = new Date().toISOString().slice(0, 7);
+  ['dump', 'fence'].forEach(team => {
+    const drivers = DRIVERS.filter(dr => dr.team === team);
+    const container = document.getElementById(team + '-roster'); container.innerHTML = '';
+    drivers.forEach(dr => {
+      const reviews = getReviewCount(dr.id, month);
+      const acts = cache.activities.filter(a => a.driver_id === dr.id);
+      const lastRA = acts.filter(a => a.type === 'Ride-Along' || a.type === 'Scorecard').sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
+      const discCount = cache.discipline.filter(dc => dc.driver_id === dr.id).length;
+      const raDays = lastRA ? daysSince(lastRA.date) : 999;
+      let badges = '';
+      if (raDays > 90) badges += '<span class="badge badge-red">&#9888; Ride-Along Due</span>';
+      else if (raDays > 75) badges += '<span class="badge badge-yellow">Ride-Along Soon</span>';
+      else badges += '<span class="badge badge-green">Ride-Along &#10003;</span>';
+      if (discCount > 0) badges += `<span class="badge badge-red">&#9888; ${discCount} Discipline</span>`;
+      container.innerHTML += `<div class="driver-card" onclick="openModal(${dr.id})">
+        <div class="driver-avatar" style="background:${dr.color}22;color:${dr.color};border-color:${dr.color}44">${dr.initials}</div>
+        <div class="driver-info"><div class="driver-name">${dr.name}</div><div class="driver-role">${dr.role}</div><div class="driver-meta">${badges}</div></div>
+        <div class="driver-reviews"><div class="review-count">${reviews}</div><div class="review-label">Reviews</div></div>
+        <span style="color:var(--muted);font-size:1.2rem;margin-left:0.25rem;">&rsaquo;</span>
+      </div>`;
+    });
+  });
+}
+
+function daysSince(ds) { if (!ds) return 999; return Math.floor((new Date() - new Date(ds + 'T00:00:00')) / 86400000); }
+
+// ════════════════════════════════════════════
+// LEADERBOARD / REVIEWS
+// ════════════════════════════════════════════
+function updateViewMonthLabel() { document.getElementById('view-month-label').textContent = MONTHS_FULL[reviewViewDate.getMonth()] + ' ' + reviewViewDate.getFullYear(); }
+function changeViewMonth(dir) { reviewViewDate = new Date(reviewViewDate.getFullYear(), reviewViewDate.getMonth() + dir, 1); updateViewMonthLabel(); renderLeaderboard(); }
+function currentViewMonth() { return `${reviewViewDate.getFullYear()}-${String(reviewViewDate.getMonth() + 1).padStart(2, '0')}`; }
+
+function renderLeaderboard() {
+  const month = currentViewMonth();
+  const sorted = DRIVERS.map(dr => ({ ...dr, count: getReviewCount(dr.id, month) })).sort((a, b) => b.count - a.count);
+  const max = sorted[0]?.count || 1;
+  document.getElementById('lb-rows').innerHTML = sorted.map((dr, i) => {
+    const rc = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const isLeader = i === 0 && dr.count > 0;
+    const bc = isLeader ? '#FFD700' : dr.color;
+    return `<div class="lb-row" onclick="openReviewProfile(${dr.id})">
+      <div class="lb-rank ${rc}">${i + 1}</div>
+      <div class="lb-avatar" style="background:${dr.color}22;color:${dr.color};border:2px solid ${dr.color}44">${dr.initials}</div>
+      <div class="lb-name-wrap"><div class="lb-name">${dr.name}${isLeader ? '<span class="bonus-badge">&#127942; BONUS</span>' : ''}</div><div class="lb-role">${dr.role}</div></div>
+      <div class="lb-bar-wrap"><div class="lb-bar" style="width:${(dr.count / max) * 100}%;background:${bc}"></div></div>
+      <div class="lb-count" style="color:${dr.color}">${dr.count}</div>
+      <span style="color:var(--muted);font-size:0.9rem;">&rsaquo;</span>
+    </div>`;
+  }).join('');
+}
+
+async function doSync() {
+  if (selectedUser !== 'Dustin') return;
+  const btn = document.getElementById('sync-btn');
+  btn.textContent = 'Syncing...'; btn.classList.add('loading');
+  let synced = 0, errors = 0;
+  try {
+    for (const tab of DRIVER_TABS) {
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab.name)}&range=A2:G13`;
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const text = await res.text();
+        const lines = text.trim().split('\n').slice(1);
+        for (const line of lines) {
+          const parts = parseCSVLine(line);
+          if (parts.length < 7) continue;
+          const name = parts[0].replace(/"/g, '').trim();
+          const totalPoints = parseInt(parts[6].replace(/"/g, '').trim()) || 0;
+          if (!name || totalPoints === 0) continue;
+          const dr = DRIVERS.find(d => d.name.toLowerCase() === name.toLowerCase());
+          if (!dr) continue;
+          await sb.from('reviews').upsert({
+            driver_id: dr.id, month: tab.month, count: totalPoints,
+            updated_by: 'Sync', updated_at: new Date().toISOString()
+          }, { onConflict: 'driver_id,month' });
+          synced++;
+        }
+      } catch (tabErr) { errors++; }
+    }
+    await loadAllData();
+    renderLeaderboard(); renderRoster();
+    document.getElementById('sync-status-label').textContent = `&#9989; Synced ${synced} records at ` + new Date().toLocaleTimeString();
+  } catch (e) {
+    alert('Sync failed: ' + e.message);
+  }
+  btn.textContent = '&#8635; Sync'; btn.classList.remove('loading');
+}
+
+function parseCSVLine(line) {
+  const result = []; let current = ''; let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; current += ch; }
+    else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current);
+  return result;
+}
+
+// ════════════════════════════════════════════
+// REVIEW PROFILE MODAL
+// ════════════════════════════════════════════
+function openReviewProfile(id) {
+  const dr = DRIVERS.find(x => x.id === id);
+  const drR = getAllReviewsForDriver(id);
+  const month = currentViewMonth();
+  const av = document.getElementById('rev-avatar');
+  av.style.cssText = `background:${dr.color}22;color:${dr.color};border-color:${dr.color}55`; av.textContent = dr.initials;
+  document.getElementById('rev-name').textContent = dr.name;
+  document.getElementById('rev-role').textContent = dr.role;
+  const thisMonth = drR[month] || 0;
+  document.getElementById('rev-this-month').textContent = thisMonth;
+  const allC = DRIVERS.map(x => getReviewCount(x.id, month)).sort((a, b) => b - a);
+  const rank = allC.indexOf(thisMonth) + 1;
+  const sfx = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+  document.getElementById('rev-rank').textContent = thisMonth > 0 ? `${rank}${sfx} place` : 'No reviews yet';
+  const yr = month.split('-')[0];
+  document.getElementById('rev-ytd').textContent = Object.entries(drR).filter(([k]) => k.startsWith(yr)).reduce((a, [, v]) => a + v, 0);
+  document.getElementById('rev-lifetime').textContent = Object.values(drR).reduce((a, b) => a + b, 0);
+  const allMonths = new Set(); cache.reviews.forEach(r => allMonths.add(r.month));
+  const wins = [];
+  allMonths.forEach(m => {
+    const counts = DRIVERS.map(x => ({ id: x.id, count: getReviewCount(x.id, m) }));
+    const top = Math.max(...counts.map(c => c.count));
+    if (top > 0 && counts.find(c => c.count === top && c.id === id)) wins.push({ month: m, count: top });
+  });
+  wins.sort((a, b) => b.month.localeCompare(a.month));
+  document.getElementById('rev-wins').textContent = wins.length;
+  const bc = document.getElementById('rev-best-card');
+  if (Object.keys(drR).length) { const best = Object.entries(drR).sort((a, b) => b[1] - a[1])[0]; document.getElementById('rev-best-val').textContent = `${best[1]} reviews`; document.getElementById('rev-best-lbl').textContent = `Best: ${formatMonth(best[0])}`; bc.style.display = 'flex'; }
+  else bc.style.display = 'none';
+  const chartMonths = []; for (let i = 11; i >= 0; i--) { const dt = new Date(reviewViewDate.getFullYear(), reviewViewDate.getMonth() - i, 1); chartMonths.push(`${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`); }
+  const cMax = Math.max(...chartMonths.map(m => drR[m] || 0), 1);
+  document.getElementById('rev-chart').innerHTML = chartMonths.map(m => {
+    const count = drR[m] || 0; const h = count > 0 ? Math.max((count / cMax) * 85, 4) : 2;
+    const isCur = m === month;
+    const mCounts = DRIVERS.map(x => ({ id: x.id, count: getReviewCount(x.id, m) }));
+    const mTop = Math.max(...mCounts.map(c => c.count));
+    const isWin = mTop > 0 && mCounts.find(c => c.count === mTop && c.id === id);
+    const bg = isCur ? 'var(--green)' : isWin ? '#FFD700' : '#2ECC7155';
+    return `<div class="bar-col"><div class="bar-val">${count > 0 ? count : ''}</div><div class="bar-fill" style="height:${h}px;background:${bg}"></div><div class="bar-label">${MONTHS[parseInt(m.split('-')[1]) - 1]}</div></div>`;
+  }).join('');
+  document.getElementById('rev-fp-list').innerHTML = wins.length ? wins.map(w => `<div class="fp-row"><div class="fp-month">&#127942; ${formatMonth(w.month)}</div><div class="fp-count">${w.count} reviews</div></div>`).join('') : '<div style="font-size:0.8rem;color:var(--muted);padding:1rem 0;text-align:center;">No #1 finishes yet.</div>';
+  document.getElementById('review-modal-overlay').classList.add('open');
+}
+function closeReviewModalBg(e) { if (e.target === document.getElementById('review-modal-overlay')) closeReviewModal(); }
+function closeReviewModal() { document.getElementById('review-modal-overlay').classList.remove('open'); }
+function formatMonth(ym) { const [y, m] = ym.split('-'); return MONTHS[parseInt(m) - 1] + ' ' + y; }
+
+// ════════════════════════════════════════════
+// FORMS
+// ════════════════════════════════════════════
+function populateForms() {
+  ['log-driver', 'sc-driver', 'disc-driver', 'insp-driver', 'history-filter'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = id === 'history-filter' ? '<option value="all">All Drivers</option>' : '';
+    DRIVERS.forEach(dr => { el.innerHTML += `<option value="${dr.id}">${dr.name} (${dr.role})</option>`; });
+  });
+}
+
+// ════════════════════════════════════════════
+// PHOTO
+// ════════════════════════════════════════════
+function handlePhotoUpload(event, previewId, key) {
+  Array.from(event.target.files).forEach(file => {
+    const r = new FileReader();
+    r.onload = e => { pendingPhotos[key].push(e.target.result); renderPreviews(previewId, key); };
+    r.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+function renderPreviews(previewId, key) {
+  document.getElementById(previewId).innerHTML = pendingPhotos[key].map((src, i) =>
+    `<div class="photo-preview"><img src="${src}" onclick="openLightbox(this.src)"><button class="photo-remove" onclick="removePhoto('${key}',${i},'${previewId}')">&#10005;</button></div>`
+  ).join('');
+}
+function removePhoto(key, i, pid) { pendingPhotos[key].splice(i, 1); renderPreviews(pid, key); }
+
+// ════════════════════════════════════════════
+// LOG ACTIVITY
+// ════════════════════════════════════════════
+async function logActivity() {
+  const driverId = parseInt(document.getElementById('log-driver').value);
+  const type = document.getElementById('log-type').value;
+  const date = document.getElementById('log-date').value;
+  const notes = document.getElementById('log-notes').value.trim();
+  if (!date) { alert('Select a date.'); return; }
+  await sb.from('activities').insert({ driver_id: driverId, type, date, notes, logged_by: selectedUser, photos: pendingPhotos.log });
+  pendingPhotos.log = []; document.getElementById('log-previews').innerHTML = ''; document.getElementById('log-notes').value = '';
+  await loadAllData();
+  alert('Saved!'); renderRoster(); renderHistory(); renderAlerts(); renderSchedule();
+}
+
+// ════════════════════════════════════════════
+// SCORECARD
+// ════════════════════════════════════════════
+function buildScorecard() {
+  const c = document.getElementById('scorecard-items');
+  SCORECARD_METRICS.forEach(m => {
+    scScores[m.key] = 0;
+    c.innerHTML += `<div class="score-item"><div class="score-item-label">${m.label}</div><div class="score-item-desc">${m.desc}</div><div class="star-row" id="stars-${m.key}">${[1, 2, 3, 4, 5].map(n => `<span class="star" onclick="setStar('${m.key}',${n})">&#11088;</span>`).join('')}</div></div>`;
+  });
+}
+function setStar(key, val) { scScores[key] = val; document.querySelectorAll(`#stars-${key} .star`).forEach((s, i) => s.classList.toggle('active', i < val)); updateScTotal(); }
+function updateScTotal() {
+  const total = Object.values(scScores).reduce((a, b) => a + b, 0); document.getElementById('sc-total').textContent = total;
+  const g = document.getElementById('sc-grade');
+  if (total >= 35) { g.textContent = '&#128994; Excellent'; g.style.cssText = 'background:#1a3322;color:var(--green)'; }
+  else if (total >= 25) { g.textContent = '&#128993; Needs Improvement'; g.style.cssText = 'background:#2e2800;color:var(--yellow)'; }
+  else if (total > 0) { g.textContent = '&#128308; Below Standard'; g.style.cssText = 'background:#2e1111;color:var(--red)'; }
+  else { g.textContent = 'Not Started'; g.style.cssText = 'background:#2e2e2e;color:var(--muted)'; }
+}
+
+async function saveScorecard() {
+  const driverId = parseInt(document.getElementById('sc-driver').value);
+  const date = document.getElementById('sc-date').value;
+  const notes = document.getElementById('sc-notes').value.trim();
+  const total = Object.values(scScores).reduce((a, b) => a + b, 0);
+  if (!date) { alert('Select a date.'); return; }
+  if (total === 0) { alert('Score at least one category.'); return; }
+  await sb.from('scorecards').insert({ driver_id: driverId, date, scores: { ...scScores }, total, notes, logged_by: selectedUser, photos: pendingPhotos.sc });
+  await sb.from('activities').insert({ driver_id: driverId, type: 'Scorecard', date, notes: `Score: ${total}/40`, logged_by: selectedUser, photos: [] });
+  pendingPhotos.sc = []; document.getElementById('sc-previews').innerHTML = ''; document.getElementById('sc-notes').value = '';
+  SCORECARD_METRICS.forEach(m => { scScores[m.key] = 0; document.querySelectorAll(`#stars-${m.key} .star`).forEach(s => s.classList.remove('active')); }); updateScTotal();
+  await loadAllData();
+  alert('Scorecard saved!'); renderRoster(); renderHistory(); renderAlerts(); renderSchedule();
+}
+
+// ════════════════════════════════════════════
+// DISCIPLINE
+// ════════════════════════════════════════════
+function selectDisc(btn, type) { document.querySelectorAll('.disc-type-btn').forEach(b => b.className = 'disc-type-btn'); btn.classList.add('selected-' + type); selectedDiscType = type; }
+
+async function saveDiscipline() {
+  const driverId = parseInt(document.getElementById('disc-driver').value);
+  const date = document.getElementById('disc-date').value;
+  const reason = document.getElementById('disc-reason').value.trim();
+  if (!selectedDiscType) { alert('Select action type.'); return; }
+  if (!date || !reason) { alert('Date and reason required.'); return; }
+  await sb.from('discipline').insert({ driver_id: driverId, date, type: selectedDiscType, reason, logged_by: selectedUser, photos: pendingPhotos.disc });
+  await sb.from('activities').insert({ driver_id: driverId, type: 'Discipline', date, notes: `${selectedDiscType.charAt(0).toUpperCase() + selectedDiscType.slice(1)} — ${reason}`, logged_by: selectedUser, photos: [] });
+  pendingPhotos.disc = []; document.getElementById('disc-previews').innerHTML = ''; document.getElementById('disc-reason').value = '';
+  document.querySelectorAll('.disc-type-btn').forEach(b => b.className = 'disc-type-btn'); selectedDiscType = null;
+  await loadAllData();
+  alert('Discipline record saved.'); renderRoster(); renderHistory(); renderAlerts(); renderSchedule();
+}
+
+// ════════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════════
+function renderHistory() {
+  const filter = document.getElementById('history-filter').value;
+  let acts = [...cache.activities];
+  if (filter !== 'all') acts = acts.filter(a => a.driver_id === parseInt(filter));
+  const list = document.getElementById('history-list');
+  if (!acts.length) { list.innerHTML = '<div class="empty-state">No activities yet.</div>'; return; }
+  list.innerHTML = acts.map(a => {
+    const dr = DRIVERS.find(x => x.id === a.driver_id); const color = TYPE_COLORS[a.type] || '#888';
+    const photos = a.photos?.length ? a.photos.map(src => `<img class="log-photo-thumb" src="${src}" onclick="openLightbox(this.src)">`).join('') : '';
+    return `<div class="log-entry"><div class="log-entry-header"><div class="log-entry-name">${dr ? dr.name : '?'}</div><div class="log-entry-date">${formatDate(a.date)}</div></div><div class="log-entry-type"><span style="color:${color}">&#9679;</span> ${a.type} ${a.logged_by ? `<span style="color:var(--muted)">&middot; by ${a.logged_by}</span>` : ''}</div>${a.notes ? `<div class="log-entry-notes">${esc(a.notes)}</div>` : ''}${photos}</div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+// DRIVER MODAL
+// ════════════════════════════════════════════
+async function openModal(id) {
+  currentDriverId = id;
+  const dr = DRIVERS.find(x => x.id === id);
+  const month = new Date().toISOString().slice(0, 7);
+  const reviews = getReviewCount(id, month);
+  const acts = cache.activities.filter(a => a.driver_id === id);
+  const scorecards = cache.scorecards.filter(s => s.driver_id === id);
+  const discRecords = cache.discipline.filter(dc => dc.driver_id === id);
+  const notes = cache.driver_notes.filter(n => n.driver_id === id);
+  const avgSc = scorecards.length ? Math.round(scorecards.reduce((a, s) => a + s.total, 0) / scorecards.length) : null;
+
+  document.getElementById('modal-avatar').style.cssText = `background:${dr.color}22;color:${dr.color};border-color:${dr.color}44`;
+  document.getElementById('modal-avatar').textContent = dr.initials;
+  document.getElementById('modal-name').textContent = dr.name;
+  document.getElementById('modal-role').textContent = dr.role;
+  document.getElementById('stat-reviews').textContent = reviews;
+  document.getElementById('stat-ridealongs').textContent = acts.filter(a => a.type === 'Ride-Along' || a.type === 'Scorecard').length;
+  document.getElementById('stat-avgsc').textContent = avgSc !== null ? avgSc + '/40' : '\u2014';
+  document.getElementById('stat-disc').textContent = discRecords.length;
+  document.getElementById('review-input').value = reviews;
+
+  document.getElementById('modal-recent').innerHTML = acts.slice(0, 5).map(a =>
+    `<div class="note-entry"><div class="note-meta">${a.type} &middot; ${formatDate(a.date)} &middot; by ${a.logged_by || '\u2014'}</div><div class="note-text">${esc(a.notes || '\u2014')}</div></div>`
+  ).join('') || '<div class="empty-state">No activity yet.</div>';
+
+  document.getElementById('modal-scorecards').innerHTML = scorecards.length ? scorecards.map(s => {
+    const g = s.total >= 35 ? '#2ECC71' : s.total >= 25 ? '#F1C40F' : '#E74C3C';
+    return `<div class="scorecard-entry"><div class="sc-entry-header"><div style="font-weight:600;font-size:0.88rem;">${formatDate(s.date)}</div><div class="sc-score-pill" style="background:${g}22;color:${g}">${s.total}/40</div></div>${s.notes ? `<div style="font-size:0.8rem;color:var(--muted);">${esc(s.notes)}</div>` : ''}<div style="font-size:0.72rem;color:var(--muted);">by ${s.logged_by || '\u2014'}</div>${s.photos?.length ? `<div class="photos-grid">${s.photos.map(src => `<img src="${src}" onclick="openLightbox(this.src)">`).join('')}</div>` : ''}</div>`;
+  }).join('') : '<div class="empty-state">No scorecards yet.</div>';
+
+  document.getElementById('modal-discipline').innerHTML = discRecords.length ? discRecords.map(dc => {
+    const col = dc.type === 'verbal' ? 'var(--yellow)' : dc.type === 'written' ? 'var(--orange)' : dc.type === 'suspension' ? 'var(--red)' : '#ff4444';
+    return `<div class="disc-entry ${dc.type}"><div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col}">${dc.type.toUpperCase()}</div><div style="font-size:0.72rem;color:var(--muted);">${formatDate(dc.date)} &middot; by ${dc.logged_by || '\u2014'}</div><div style="font-size:0.85rem;">${esc(dc.reason)}</div>${dc.photos?.length ? `<div class="photos-grid">${dc.photos.map(src => `<img src="${src}" onclick="openLightbox(this.src)">`).join('')}</div>` : ''}</div>`;
+  }).join('') : '<div class="empty-state">No discipline records.</div>';
+
+  renderModalNotes(id);
+
+  const allPhotos = [...acts.flatMap(a => a.photos || []), ...scorecards.flatMap(s => s.photos || []), ...discRecords.flatMap(dc => dc.photos || [])];
+  const pg = document.getElementById('modal-photos'), pe = document.getElementById('modal-photos-empty');
+  if (allPhotos.length) { pg.style.display = 'grid'; pe.style.display = 'none'; pg.innerHTML = allPhotos.map(src => `<img src="${src}" onclick="openLightbox(this.src)">`).join(''); }
+  else { pg.style.display = 'none'; pe.style.display = 'block'; }
+
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.modal-tab').classList.add('active');
+  document.getElementById('mtab-overview').classList.add('active');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function saveReviews() {
+  const val = parseInt(document.getElementById('review-input').value);
+  if (isNaN(val) || val < 0) { alert('Enter valid number.'); return; }
+  const month = new Date().toISOString().slice(0, 7);
+  await sb.from('reviews').upsert({ driver_id: currentDriverId, month, count: val, updated_by: selectedUser, updated_at: new Date().toISOString() }, { onConflict: 'driver_id,month' });
+  await loadAllData();
+  document.getElementById('stat-reviews').textContent = val;
+  renderLeaderboard(); renderRoster();
+  alert('Updated!');
+}
+
+async function saveNote() {
+  const text = document.getElementById('note-input').value.trim();
+  if (!text) return;
+  await sb.from('driver_notes').insert({ driver_id: currentDriverId, text, created_by: selectedUser });
+  await loadAllData();
+  document.getElementById('note-input').value = '';
+  renderModalNotes(currentDriverId);
+}
+
+function renderModalNotes(id) {
+  const notes = cache.driver_notes.filter(n => n.driver_id === id);
+  document.getElementById('modal-notes').innerHTML = notes.length ? notes.map(n =>
+    `<div class="note-entry"><div class="note-meta">${formatDate(n.created_at?.split('T')[0])} &middot; by ${n.created_by}</div><div class="note-text">${esc(n.text)}</div></div>`
+  ).join('') : '<div class="empty-state">No notes yet.</div>';
+}
+
+function closeModalBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+// ════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════
+function formatDate(str) { if (!str) return ''; const [y, m, day] = str.split('-'); return MONTHS[parseInt(m) - 1] + ' ' + parseInt(day) + ', ' + y; }
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('open'); }
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+</script>
+</body>
+</html>
