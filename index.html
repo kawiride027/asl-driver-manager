@@ -462,7 +462,7 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <div class="tab-panel" id="tab-log-activity">
 <div class="tabs" id="log-subtabs">
 <button class="tab active" onclick="switchLogTab('general',this)">General</button>
-<button class="tab" onclick="switchLogTab('scorecard',this)">Scorecard</button>
+<button class="tab" onclick="switchLogTab('scorecard',this)">Perform Ride-Along</button>
 <button class="tab" onclick="switchLogTab('discipline',this)">Discipline</button>
 </div>
 <div id="logtab-general" class="log-form">
@@ -470,7 +470,7 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="log-driver"></select></div>
 <div class="form-group"><label class="form-label">Activity Type</label>
 <select class="form-select" id="log-type">
-<option>Ride-Along</option><option>Performance Review</option>
+<option>Performance Review</option>
 <option>Coaching Session</option><option>Review Check-In</option><option>Other</option>
 </select>
 </div>
@@ -528,6 +528,7 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <div class="photo-preview-row" id="disc-previews"></div>
 </div>
 <button class="submit-btn danger" onclick="saveDiscipline()">Save Discipline Record</button>
+<button class="submit-btn" style="margin-top:0.5rem;background:var(--blue);color:#fff;" onclick="emailDiscipline()">&#9993; Email Discipline Report</button>
 </div>
 </div>
 </div>
@@ -550,10 +551,10 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <button class="modal-close" onclick="closeModalDirect()">&#10005;</button>
 </div>
 <div class="stat-grid">
-<div class="stat-box"><div class="stat-val" id="stat-reviews">0</div><div class="stat-lbl">Reviews This Month</div></div>
-<div class="stat-box"><div class="stat-val" id="stat-ridealongs">0</div><div class="stat-lbl">Ride-Alongs</div></div>
-<div class="stat-box"><div class="stat-val" id="stat-avgsc">&mdash;</div><div class="stat-lbl">Avg Score</div></div>
-<div class="stat-box"><div class="stat-val red" id="stat-disc">0</div><div class="stat-lbl">Discipline</div></div>
+<div class="stat-box" onclick="closeModalDirect();switchTab('leaderboard',document.querySelector('[onclick*=leaderboard]'))" style="cursor:pointer;" title="Go to Reviews"><div class="stat-val" id="stat-reviews">0</div><div class="stat-lbl">Reviews This Month</div></div>
+<div class="stat-box" onclick="closeModalDirect();switchTab('log-activity',document.querySelector('[onclick*=log-activity]'));setTimeout(()=>{const b=document.querySelector('#log-subtabs .tab:nth-child(2)');if(b){switchLogTab('scorecard',b);}},100)" style="cursor:pointer;" title="Perform Ride-Along"><div class="stat-val" id="stat-ridealongs">0</div><div class="stat-lbl">Ride-Alongs</div></div>
+<div class="stat-box" onclick="switchModalTab('scorecards',document.querySelectorAll('.modal-tab')[1])" style="cursor:pointer;" title="View Scorecards"><div class="stat-val" id="stat-avgsc">&mdash;</div><div class="stat-lbl">Avg Score</div></div>
+<div class="stat-box" onclick="switchModalTab('discipline',document.querySelectorAll('.modal-tab')[2])" style="cursor:pointer;" title="View Discipline"><div class="stat-val red" id="stat-disc">0</div><div class="stat-lbl">Discipline</div></div>
 </div>
 <div class="modal-tabs">
 <button class="modal-tab active" onclick="switchModalTab('overview',this)">Overview</button>
@@ -866,16 +867,29 @@ function renderAlerts() {
   const openTodos = cache.todos.filter(t => !t.done).length;
   if (openTodos > 0) { let b = tb.querySelector('.tab-badge'); if (!b) { b = document.createElement('div'); b.className = 'tab-badge'; tb.appendChild(b); } b.textContent = openTodos; }
   else { const b = tb.querySelector('.tab-badge'); if (b) b.remove(); }
-  if (!alerts.length) { c.innerHTML = '<div class="no-alerts">&#9989; All clear &mdash; no tasks due in the next 7 days.</div>'; return; }
-  c.innerHTML = alerts.map(item => {
+  const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+  const filteredAlerts = alerts.filter(item => {
+    const key = item.driverId + '-' + item.type + '-' + item.dueDate.toISOString().split('T')[0];
+    return !dismissed.includes(key);
+  });
+  if (!filteredAlerts.length) { c.innerHTML = '<div class="no-alerts">&#9989; All clear &mdash; no tasks due in the next 7 days.</div>'; return; }
+  c.innerHTML = filteredAlerts.map(item => {
     const days = daysUntil(item.dueDate);
     let cls, icon, urgency;
     if (days < 0) { cls = 'overdue'; icon = '&#128308;'; urgency = `Overdue ${Math.abs(days)}d`; }
     else if (days <= 1) { cls = 'due-today'; icon = '&#128992;'; urgency = days === 0 ? 'Due TODAY' : 'Due TOMORROW'; }
     else { cls = 'due-week'; icon = '&#128993;'; urgency = `Due in ${days}d`; }
     const bc = days < 0 ? '#E74C3C' : days <= 1 ? '#E67E22' : '#F1C40F';
-    return `<div class="alert-banner ${cls}"><div class="alert-icon">${icon}</div><div class="alert-body"><div class="alert-title">${item.driverName} &mdash; ${item.type}</div><div class="alert-sub">${item.notes || ''}${item.auto ? ' (auto-triggered)' : ''}</div></div><div class="alert-badge" style="background:${bc}22;color:${bc}">${urgency}</div></div>`;
+    const alertKey = item.driverId + '-' + item.type + '-' + item.dueDate.toISOString().split('T')[0];
+    return `<div class="alert-banner ${cls}"><div class="alert-icon">${icon}</div><div class="alert-body"><div class="alert-title">${item.driverName} &mdash; ${item.type}</div><div class="alert-sub">${item.notes || ''}${item.auto ? ' (auto-triggered)' : ''}</div></div><div class="alert-badge" style="background:${bc}22;color:${bc}">${urgency}</div><button onclick="event.stopPropagation();dismissAlert('${alertKey}')" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:0.25rem;margin-left:0.5rem;flex-shrink:0;" title="Dismiss">&#10005;</button></div>`;
   }).join('');
+}
+
+function dismissAlert(key) {
+  const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+  dismissed.push(key);
+  localStorage.setItem('dismissedAlerts', JSON.stringify(dismissed));
+  renderAlerts();
 }
 
 function renderSchedule() {
@@ -1008,7 +1022,7 @@ function renderRocks() {
       <div class="rock-top"><div class="rock-icon">&#129704;</div><div class="rock-title">${esc(rock.title)}</div></div>
       <div class="rock-meta"><span class="pri-badge ${priClass}">${priLabel}</span><span style="font-size:0.68rem;color:var(--muted);">by ${rock.created_by || '?'}</span></div>
       <div class="rock-progress-wrap"><div class="rock-progress-bar" style="width:${statusPct}%;background:${barColor}"></div></div>
-      <div class="rock-progress-label"><span>${statusPct}%</span><span>${currentQuarter} ${yr}</span></div>
+      <div class="rock-progress-label"><span>${statusPct}%</span><span>Due ${getQuarterEndDate(currentQuarter, yr)}</span></div>
       <div class="progress-btns">${ROCK_STATUSES.map((s, i) => `<button class="prog-btn ${rock.status === i ? 'active-prog' : ''}" onclick="setRockStatus('${rock.id}',${i})">${s}</button>`).join('')}</div>
     </div>`;
   }).join('');
@@ -1222,17 +1236,17 @@ function buildScorecard() {
   const c = document.getElementById('scorecard-items');
   SCORECARD_METRICS.forEach(m => {
     scScores[m.key] = 0;
-    c.innerHTML += `<div class="score-item"><div class="score-item-label">${m.label}</div><div class="score-item-desc">${m.desc}</div><div class="star-row" id="stars-${m.key}">${[1, 2, 3, 4, 5].map(n => `<span class="star" onclick="setStar('${m.key}',${n})">&#11088;</span>`).join('')}</div></div>`;
+    c.innerHTML += `<div class="score-item"><div class="score-item-label">${m.label}</div><div class="score-item-desc">${m.desc}</div><div class="star-row" id="stars-${m.key}">${[1, 2, 3, 4, 5].map(n => `<span class="star" onclick="setStar('${m.key}',${n})">&#11088;</span>`).join('')}</div><input type="text" class="form-input sc-metric-note" id="sc-note-${m.key}" placeholder="Notes for ${m.label}..." style="margin-top:0.5rem;font-size:0.8rem;padding:0.45rem 0.7rem;"></div>`;
   });
 }
 function setStar(key, val) { scScores[key] = val; document.querySelectorAll(`#stars-${key} .star`).forEach((s, i) => s.classList.toggle('active', i < val)); updateScTotal(); }
 function updateScTotal() {
   const total = Object.values(scScores).reduce((a, b) => a + b, 0); document.getElementById('sc-total').textContent = total;
   const g = document.getElementById('sc-grade');
-  if (total >= 35) { g.textContent = '&#128994; Excellent'; g.style.cssText = 'background:#1a3322;color:var(--green)'; }
-  else if (total >= 25) { g.textContent = '&#128993; Needs Improvement'; g.style.cssText = 'background:#2e2800;color:var(--yellow)'; }
-  else if (total > 0) { g.textContent = '&#128308; Below Standard'; g.style.cssText = 'background:#2e1111;color:var(--red)'; }
-  else { g.textContent = 'Not Started'; g.style.cssText = 'background:#2e2e2e;color:var(--muted)'; }
+  if (total >= 35) { g.innerHTML = '&#128994; Excellent'; g.style.cssText = 'background:#1a3322;color:var(--green)'; }
+  else if (total >= 25) { g.innerHTML = '&#128993; Needs Improvement'; g.style.cssText = 'background:#2e2800;color:var(--yellow)'; }
+  else if (total > 0) { g.innerHTML = '&#128308; Below Standard'; g.style.cssText = 'background:#2e1111;color:var(--red)'; }
+  else { g.innerHTML = 'Not Started'; g.style.cssText = 'background:#2e2e2e;color:var(--muted)'; }
 }
 
 async function saveScorecard() {
@@ -1242,10 +1256,12 @@ async function saveScorecard() {
   const total = Object.values(scScores).reduce((a, b) => a + b, 0);
   if (!date) { alert('Select a date.'); return; }
   if (total === 0) { alert('Score at least one category.'); return; }
-  await sb.from('scorecards').insert({ driver_id: driverId, date, scores: { ...scScores }, total, notes, logged_by: selectedUser, photos: pendingPhotos.sc });
+  const metricNotes = {};
+  SCORECARD_METRICS.forEach(m => { const n = document.getElementById('sc-note-' + m.key); if (n && n.value.trim()) metricNotes[m.key] = n.value.trim(); });
+  await sb.from('scorecards').insert({ driver_id: driverId, date, scores: { ...scScores }, total, notes, metric_notes: metricNotes, logged_by: selectedUser, photos: pendingPhotos.sc });
   await sb.from('activities').insert({ driver_id: driverId, type: 'Scorecard', date, notes: `Score: ${total}/40`, logged_by: selectedUser, photos: [] });
   pendingPhotos.sc = []; document.getElementById('sc-previews').innerHTML = ''; document.getElementById('sc-notes').value = '';
-  SCORECARD_METRICS.forEach(m => { scScores[m.key] = 0; document.querySelectorAll(`#stars-${m.key} .star`).forEach(s => s.classList.remove('active')); }); updateScTotal();
+  SCORECARD_METRICS.forEach(m => { scScores[m.key] = 0; document.querySelectorAll(`#stars-${m.key} .star`).forEach(s => s.classList.remove('active')); const n = document.getElementById('sc-note-' + m.key); if (n) n.value = ''; }); updateScTotal();
   await loadAllData();
   alert('Scorecard saved!'); renderRoster(); renderHistory(); renderAlerts(); renderSchedule();
 }
@@ -1267,6 +1283,17 @@ async function saveDiscipline() {
   document.querySelectorAll('.disc-type-btn').forEach(b => b.className = 'disc-type-btn'); selectedDiscType = null;
   await loadAllData();
   alert('Discipline record saved.'); renderRoster(); renderHistory(); renderAlerts(); renderSchedule();
+}
+
+function emailDiscipline() {
+  const driverId = parseInt(document.getElementById('disc-driver').value);
+  const dr = DRIVERS.find(x => x.id === driverId);
+  const type = selectedDiscType ? selectedDiscType.charAt(0).toUpperCase() + selectedDiscType.slice(1) : 'N/A';
+  const date = document.getElementById('disc-date').value || 'N/A';
+  const reason = document.getElementById('disc-reason').value.trim() || 'N/A';
+  const subject = encodeURIComponent(`Discipline Action: ${type} — ${dr ? dr.name : 'Driver'} (${date})`);
+  const body = encodeURIComponent(`DISCIPLINE ACTION REPORT\n\nDriver: ${dr ? dr.name : 'N/A'}\nAction Type: ${type}\nDate: ${date}\nIssued By: ${selectedUser}\n\nReason / Details:\n${reason}\n\n---\nSent from ASL Driver Manager`);
+  window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
 }
 
 // ════════════════════════════════════════════
@@ -1371,6 +1398,7 @@ function closeModalDirect() { document.getElementById('modal-overlay').classList
 // UTILITIES
 // ════════════════════════════════════════════
 function formatDate(str) { if (!str) return ''; const [y, m, day] = str.split('-'); return MONTHS[parseInt(m) - 1] + ' ' + parseInt(day) + ', ' + y; }
+function getQuarterEndDate(q, yr) { const ends = { Q1: 'Mar 31', Q2: 'Jun 30', Q3: 'Sep 30', Q4: 'Dec 31' }; return (ends[q] || '') + ', ' + yr; }
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('open'); }
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
