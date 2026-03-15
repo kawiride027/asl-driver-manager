@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ASL Driver Manager — Quick Start Guide</title>
+<style>
+:root{--green:#2ECC71;--bg:#0D0D0D;--surface:#1A1A1A;--surface2:#252525;--border:#2E2E2E;--text:#F0F0F0;--muted:#888}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','SF Pro Text',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:1.5rem;max-width:700px;margin:0 auto}
+h1{font-size:1.8rem;color:var(--green);margin-bottom:0.25rem;letter-spacing:1px}
+.subtitle{color:var(--muted);font-size:0.85rem;margin-bottom:2rem;border-bottom:1px solid var(--border);padding-bottom:1.5rem}
+h2{font-size:1.15rem;color:var(--green);margin:2rem 0 0.75rem;padding:0.5rem 0.75rem;background:var(--surface);border-left:3px solid var(--green);border-radius:0 8px 8px 0}
+h3{font-size:0.95rem;color:#ccc;margin:1.25rem 0 0.5rem}
+p{font-size:0.88rem;color:#ccc;margin-bottom:0.75rem}
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.15rem;margin-bottom:0.75rem}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--green);color:#000;font-size:0.75rem;font-weight:700;margin-right:0.5rem;flex-shrink:0}
+.step-title{font-weight:600;font-size:0.9rem;margin-bottom:0.35rem;display:flex;align-items:center}
+.step-desc{font-size:0.82rem;color:var(--muted);margin-left:2.1rem}
+.tip{background:#1a2e1a;border:1px solid #2a5a2a;border-radius:10px;padding:0.75rem 1rem;margin:0.75rem 0;font-size:0.82rem;color:#8fcf8f}
+.tip::before{content:'💡 ';font-size:1rem}
+.warn{background:#2e1a00;border:1px solid #5a3800;border-radius:10px;padding:0.75rem 1rem;margin:0.75rem 0;font-size:0.82rem;color:#d4a056}
+.warn::before{content:'⚠️ ';font-size:1rem}
+.emoji-label{font-size:1.1rem;margin-right:0.4rem}
+.tag{display:inline-block;font-size:0.65rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:10px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.5px}
+.tag-all{background:#1a3322;color:var(--green)}
+.tag-dustin{background:#1a1a3e;color:#7c7cf0}
+.tab-ref{display:inline-block;background:var(--surface2);border:1px solid var(--border);padding:0.1rem 0.5rem;border-radius:12px;font-size:0.75rem;font-weight:600;color:var(--green);margin:0 0.15rem}
+.score-example{display:grid;grid-template-columns:repeat(5,1fr);gap:0.25rem;margin:0.5rem 0 0.5rem 2.1rem;max-width:200px}
+.star{text-align:center;font-size:1rem;opacity:0.3}
+.star.on{opacity:1}
+.divider{border:none;border-top:1px solid var(--border);margin:2rem 0}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.toc-title{font-weight:700;font-size:0.9rem;margin-bottom:0.5rem;color:var(--green)}
+.toc a{display:block;color:var(--muted);font-size:0.82rem;text-decoration:none;padding:0.2rem 0;transition:color 0.2s}
+.toc a:hover{color:var(--green)}
+.toc a::before{content:'→ ';color:var(--green);opacity:0.5}
+.footer{text-align:center;color:var(--muted);font-size:0.72rem;margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.back-link{display:inline-block;margin-bottom:1.5rem;color:var(--green);text-decoration:none;font-size:0.85rem;font-weight:600}
+.back-link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<a href="./" class="back-link">‹ Back to App</a>
+
+<h1>🚛 ASL Driver Manager</h1>
+<div class="subtitle">Quick Start Guide — Everything you need to know, no fluff</div>
+
+<div class="toc">
+<div class="toc-title">What's Inside</div>
+<a href="#login">Logging In</a>
+<a href="#alerts">Alerts — Your Daily Starting Point</a>
+<a href="#schedule">Schedule — What's Coming Up</a>
+<a href="#quick-schedule">Quick Schedule — Setting Up Future Tasks</a>
+<a href="#ridealong">Performing a Ride-Along</a>
+<a href="#roster">Roster — Your Drivers at a Glance</a>
+<a href="#reviews">Reviews — Google Review Tracking</a>
+<a href="#log">Logging Activities</a>
+<a href="#discipline">Discipline Actions</a>
+<a href="#todos">To-Dos</a>
+<a href="#rocks">Quarterly Rocks</a>
+<a href="#history">History</a>
+<a href="#navigation">Navigation Tips</a>
+<a href="#users">Who Can Do What</a>
+</div>
+
+<!-- ═══════ LOGIN ═══════ -->
+<h2 id="login"><span class="emoji-label">🔐</span> Logging In</h2>
+<p>When you open the app, you'll see the login screen. It's simple — pick your name and punch in your PIN.</p>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Tap your name</div>
+<div class="step-desc">Select David, Clint, or Dustin from the buttons at the top.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Enter your 4-digit PIN</div>
+<div class="step-desc">Use the number pad. The dots fill in as you type.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">3</span> Tap GO</div>
+<div class="step-desc">If the PIN is correct, the app loads your dashboard. If not, it'll shake and let you try again.</div>
+</div>
+
+<div class="tip">Forgot your PIN? Ask your admin — PINs are set in the app config.</div>
+
+<!-- ═══════ ALERTS ═══════ -->
+<h2 id="alerts"><span class="emoji-label">🔔</span> Alerts — Your Daily Starting Point</h2>
+<p>This is your home screen. It shows everything that needs attention <strong>in the next 7 days</strong>. Think of it as your morning checklist.</p>
+
+<h3>What you'll see</h3>
+<div class="step-card">
+<div class="step-title">🔴 Red alerts = Overdue</div>
+<div class="step-desc">Something should have been done already. Handle it ASAP.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🟠 Orange alerts = Due today or tomorrow</div>
+<div class="step-desc">Time-sensitive. Get to these today if you can.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🟡 Yellow alerts = Due this week</div>
+<div class="step-desc">On the horizon. Plan for these in the next few days.</div>
+</div>
+
+<h3>What you can do</h3>
+<p><strong>Tap an alert</strong> to jump straight to the action — if it's a ride-along alert, you'll land on the ride-along form with the driver pre-selected. If it's an inspection, you'll jump to the scheduler.</p>
+<p><strong>Tap the ✕</strong> on the right side to dismiss an alert. You'll get a confirmation prompt first. Dismissed alerts won't come back until the next cycle.</p>
+
+<div class="tip">When you see "All clear ✅" — nice work, you're caught up!</div>
+
+<!-- ═══════ SCHEDULE ═══════ -->
+<h2 id="schedule"><span class="emoji-label">📅</span> Schedule — What's Coming Up</h2>
+<p>The schedule shows <strong>all upcoming tasks</strong> organized by month. The app automatically generates these based on cadence rules:</p>
+
+<div class="step-card">
+<div class="step-title">🟢 Ride-Alongs</div>
+<div class="step-desc">Auto-generated every <strong>90 days</strong> per driver. Do a ride-along, and the next one auto-schedules 90 days out.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🔵 Performance Reviews</div>
+<div class="step-desc">Auto-generated every <strong>180 days</strong> per driver (twice a year).</div>
+</div>
+<div class="step-card">
+<div class="step-title">🟠 Coaching</div>
+<div class="step-desc">Only shows up when a driver has discipline records or scored below 25/40 on a ride-along. Recurs every <strong>30 days</strong> once triggered. Tagged as "Auto" so you know the system flagged it.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🩵 Inspections</div>
+<div class="step-desc">These are manually scheduled by you using Quick Schedule (see below).</div>
+</div>
+
+<h3>How to use it</h3>
+<p>Use the <strong>‹ ›</strong> arrows to flip between months. Use the <strong>filter buttons</strong> (All, Ride-Alongs, Inspections, etc.) to zero in on one type.</p>
+<p><strong>Tap any task</strong> in the list to take action on it — just like alerts.</p>
+
+<!-- ═══════ QUICK SCHEDULE ═══════ -->
+<h2 id="quick-schedule"><span class="emoji-label">⚡</span> Quick Schedule — Setting Up Future Tasks</h2>
+<p>Right below the filters, you'll see four Quick Schedule buttons. This is how you <strong>manually schedule</strong> any task for any driver.</p>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Tap the button for what you want to schedule</div>
+<div class="step-desc">🚗 Ride-Along, 📋 Inspection, ⭐ Review, or 💬 Coaching</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Pick a driver from the dropdown</div>
+<div class="step-desc">All active drivers are listed.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">3</span> Tap the date field to open the calendar</div>
+<div class="step-desc">Pick the day you want to do it.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">4</span> Add notes (optional) and hit Schedule</div>
+<div class="step-desc">Done! It shows up in the Schedule and will generate an alert when it's coming due.</div>
+</div>
+
+<div class="tip">You can also schedule from a driver's profile — open a driver from the <span class="tab-ref">Roster</span> tab and tap "Schedule Ride-Along" or "Schedule Inspection" right in the modal.</div>
+
+<!-- ═══════ RIDE-ALONG ═══════ -->
+<h2 id="ridealong"><span class="emoji-label">🚛</span> Performing a Ride-Along</h2>
+<p>This is the big one. Ride-alongs are how you evaluate your drivers in the field. Here's how to do it from start to finish:</p>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Go to <span class="tab-ref">Log</span> → <span class="tab-ref">Perform Ride-Along</span></div>
+<div class="step-desc">Or just tap a ride-along alert — it'll take you right there.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Select the driver and date</div>
+<div class="step-desc">Driver dropdown + calendar picker. Today's date is pre-filled.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">3</span> Rate each of the 8 categories (1-5 stars)</div>
+<div class="step-desc">Tap the stars for each metric. The total score updates live at the top.</div>
+</div>
+
+<p>Here are the <strong>8 things you're rating</strong>:</p>
+<div class="step-card">
+<div class="step-title">⭐ Professionalism</div>
+<div class="step-desc">Uniform, appearance, attitude with customer</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Safety</div>
+<div class="step-desc">Driving habits, backing, spotting, PPE</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Customer Interaction</div>
+<div class="step-desc">Greeting, communication, leaves good impression</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Placement Accuracy</div>
+<div class="step-desc">Dumpster positioned correctly, gate clearance, surface protection</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Route Efficiency</div>
+<div class="step-desc">Organized stops, no unnecessary delays</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Review Ask</div>
+<div class="step-desc">Did they ask the customer for a Google review?</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Truck Condition</div>
+<div class="step-desc">Cab cleanliness, pre-trip habits</div>
+</div>
+<div class="step-card">
+<div class="step-title">⭐ Documentation</div>
+<div class="step-desc">Photos taken, notes in Docket, issues reported</div>
+</div>
+
+<p>Each category also has a <strong>notes field</strong> underneath the stars — use it to jot down specific observations.</p>
+
+<h3>Score Grades</h3>
+<div class="step-card">
+<div class="step-title">🟢 36-40 = Excellent</div>
+<div class="step-desc">Top-tier performance. Give them a high-five.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🟢 30-35 = Good</div>
+<div class="step-desc">Solid work, minor things to improve.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🟡 25-29 = Needs Improvement</div>
+<div class="step-desc">Some areas need coaching attention.</div>
+</div>
+<div class="step-card">
+<div class="step-title">🔴 Below 25 = Below Standard</div>
+<div class="step-desc">Triggers automatic coaching sessions on the schedule.</div>
+</div>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">4</span> Add overall notes and photos</div>
+<div class="step-desc">Scroll down for the general notes box and photo upload area.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">5</span> Hit "Save Scorecard"</div>
+<div class="step-desc">Done! The ride-along is logged and the next one auto-schedules 90 days out.</div>
+</div>
+
+<div class="warn">Scores below 25 will automatically trigger coaching sessions on the Schedule tab — the system flags these so you don't have to remember.</div>
+
+<!-- ═══════ ROSTER ═══════ -->
+<h2 id="roster"><span class="emoji-label">👥</span> Roster — Your Drivers at a Glance</h2>
+<p>The Roster tab shows all your drivers organized by team (Dumpster Drivers and Fence Crew). Each card shows the driver's name, role, and status badges.</p>
+
+<h3>Tap a driver to open their profile</h3>
+<p>The driver modal pops up with everything about that driver:</p>
+
+<div class="step-card">
+<div class="step-title">📊 Stat boxes at the top</div>
+<div class="step-desc"><strong>Reviews This Month</strong> — tap to go to the Reviews tab. <strong>Ride-Alongs</strong> — tap to perform one. <strong>Avg Score</strong> — tap to see past scorecards. <strong>Discipline</strong> — tap to see discipline records.</div>
+</div>
+<div class="step-card">
+<div class="step-title">⚡ Quick action buttons</div>
+<div class="step-desc">"Schedule Ride-Along" and "Schedule Inspection" — these jump you to the Schedule tab with that driver pre-selected.</div>
+</div>
+<div class="step-card">
+<div class="step-title">📋 Tabs: Overview, Scorecards, Discipline, Notes, Photos</div>
+<div class="step-desc"><strong>Overview</strong> — edit review count, see recent activity. <strong>Scorecards</strong> — all past ride-along scores. <strong>Discipline</strong> — any warnings or actions. <strong>Notes</strong> — add/view private notes about the driver. <strong>Photos</strong> — all uploaded photos.</div>
+</div>
+
+<!-- ═══════ REVIEWS ═══════ -->
+<h2 id="reviews"><span class="emoji-label">⭐</span> Reviews — Google Review Tracking</h2>
+<p>This tab tracks how many <strong>Google reviews</strong> each driver is getting customers to leave. It's a monthly leaderboard — a little friendly competition.</p>
+
+<h3>How to update a driver's review count</h3>
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Go to <span class="tab-ref">Roster</span>, tap a driver</div>
+<div class="step-desc">In their profile, you'll see "Reviews This Month" with an input field.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Type the number and tap Save</div>
+<div class="step-desc">The leaderboard updates automatically.</div>
+</div>
+
+<p><strong>Tap any name</strong> on the leaderboard to see their full review history — a 12-month bar chart, their best month, total wins, and lifetime count.</p>
+
+<div class="tip">Dustin can use the <strong>Sync</strong> button to pull review data from the linked Google Sheet automatically.</div>
+
+<!-- ═══════ LOG ═══════ -->
+<h2 id="log"><span class="emoji-label">📝</span> Logging Activities</h2>
+<p>The <span class="tab-ref">Log</span> tab has three sub-tabs:</p>
+
+<div class="step-card">
+<div class="step-title">General</div>
+<div class="step-desc">Log a Performance Review, Coaching Session, Review Check-In, or other activity. Pick the driver, date, add notes and photos, hit Save.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Perform Ride-Along</div>
+<div class="step-desc">The full ride-along scorecard (covered above). This is where the action happens.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Discipline</div>
+<div class="step-desc">Record discipline actions (covered below).</div>
+</div>
+
+<!-- ═══════ DISCIPLINE ═══════ -->
+<h2 id="discipline"><span class="emoji-label">⚠️</span> Discipline Actions</h2>
+<p>When a driver needs a formal warning or action, go to <span class="tab-ref">Log</span> → <span class="tab-ref">Discipline</span>.</p>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Select the driver</div>
+<div class="step-desc">Pick from the dropdown.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Choose the action type</div>
+<div class="step-desc">Verbal Warning → Written Warning → Suspension → Termination. Tap the button for the appropriate level.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">3</span> Set the date and describe the incident</div>
+<div class="step-desc">Be specific — this becomes the official record.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">4</span> Attach evidence if needed</div>
+<div class="step-desc">Photos, screenshots — tap the attachment area to upload.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">5</span> Save or Email</div>
+<div class="step-desc"><strong>Save Discipline Record</strong> — saves to the system. <strong>Email Discipline Report</strong> — opens your email app with a pre-filled report you can send to HR or the driver.</div>
+</div>
+
+<div class="warn">Discipline records trigger automatic coaching sessions on the schedule — the system keeps you on top of follow-ups.</div>
+
+<!-- ═══════ TODOS ═══════ -->
+<h2 id="todos"><span class="emoji-label">✅</span> To-Dos</h2>
+<p>Your personal task list. Simple and straightforward.</p>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Type what needs to be done</div>
+<div class="step-desc">In the text field at the top.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Set priority</div>
+<div class="step-desc">🔴 High, 🟡 Medium, or 🟢 Low.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">3</span> Tap "Add To-Do"</div>
+<div class="step-desc">It shows up in the Open section. Tap a to-do to mark it complete — it moves to the Completed section.</div>
+</div>
+
+<div class="tip">The <span class="tab-ref">To-Dos</span> tab shows a red badge with the number of open items — so you always know how many things are on your plate.</div>
+
+<!-- ═══════ ROCKS ═══════ -->
+<h2 id="rocks"><span class="emoji-label">🪨</span> Quarterly Rocks</h2>
+<p>Big-picture goals for the quarter. These are your "rocks" — the important things that move the needle.</p>
+
+<div class="step-card">
+<div class="step-title"><span class="step-num">1</span> Select the quarter (Q1, Q2, Q3, Q4)</div>
+<div class="step-desc">The app auto-selects the current quarter when you log in.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">2</span> Add a rock</div>
+<div class="step-desc">Type the goal, set priority, tap "Add Rock." The due date auto-fills as the last day of that quarter.</div>
+</div>
+<div class="step-card">
+<div class="step-title"><span class="step-num">3</span> Update status as you go</div>
+<div class="step-desc">Each rock can be: <strong>Not Started</strong>, <strong>On Track</strong>, <strong>At Risk</strong>, or <strong>Complete</strong>. Update them throughout the quarter.</div>
+</div>
+
+<!-- ═══════ HISTORY ═══════ -->
+<h2 id="history"><span class="emoji-label">📜</span> History</h2>
+<p>A chronological log of everything that's been recorded — activities, scorecards, discipline, the works. Use the <strong>driver filter</strong> at the top to see one driver's full history, or leave it on "All Drivers" for the big picture.</p>
+
+<hr class="divider">
+
+<!-- ═══════ NAVIGATION ═══════ -->
+<h2 id="navigation"><span class="emoji-label">🧭</span> Navigation Tips</h2>
+
+<div class="step-card">
+<div class="step-title">‹ Back Button</div>
+<div class="step-desc">Appears in the top-left after you navigate between tabs. Tap it to go back to where you came from. Works like your browser's back button — it remembers your path.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Swipe the tab bar</div>
+<div class="step-desc">There are 8 tabs. If you can't see them all, swipe the tab bar left/right to reveal more.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Tap alert banners</div>
+<div class="step-desc">They're not just notifications — tap them to jump straight to the action. A ride-along alert takes you to the scorecard. An inspection alert opens the scheduler.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Tap schedule items</div>
+<div class="step-desc">Same idea — tap a task on the schedule to take action on it right away.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Tap stat boxes in driver profiles</div>
+<div class="step-desc">The four boxes at the top of a driver's profile (Reviews, Ride-Alongs, Avg Score, Discipline) are all tappable shortcuts.</div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════ USERS ═══════ -->
+<h2 id="users"><span class="emoji-label">👤</span> Who Can Do What</h2>
+<p>All three users can do everything listed above. A few things are role-specific:</p>
+
+<div class="step-card">
+<div class="step-title">David <span class="tag tag-all">Manager</span></div>
+<div class="step-desc">Full access to all tabs. Can schedule tasks, perform ride-alongs, log discipline, manage rocks and to-dos.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Clint <span class="tag tag-all">Manager</span></div>
+<div class="step-desc">Same as David — full access to everything.</div>
+</div>
+<div class="step-card">
+<div class="step-title">Dustin <span class="tag tag-dustin">Admin</span></div>
+<div class="step-desc">Everything David and Clint can do, <strong>plus</strong> the <strong>Sync</strong> button on the Reviews tab to pull Google review data from the linked spreadsheet.</div>
+</div>
+
+<hr class="divider">
+
+<div class="tip" style="text-align:center;background:var(--surface);border-color:var(--border);">
+<strong>The golden rule:</strong> Start at <span class="tab-ref">🔔 Alerts</span> each morning. Tap the red ones first, then the orange, then the yellow. Everything else flows from there.
+</div>
+
+<div class="footer">
+ASL Driver Manager — Quick Start Guide<br>
+Last updated March 2026
+</div>
+
+</body>
+</html>
