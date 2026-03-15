@@ -46,6 +46,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .topbar-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--green)}
 .topbar-user{font-size:0.72rem;color:var(--muted)}
 .logout-btn{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer}
+.help-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--green);background:none;color:var(--green);font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.help-btn:active{background:var(--green);color:#000}
+.help-panel{position:fixed;top:0;right:-100%;width:100%;max-width:440px;height:100vh;background:var(--bg);z-index:200;transition:right 0.3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.help-panel.open{right:0}
+.help-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:199;display:none}
+.help-overlay.open{display:block}
+.help-header{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;z-index:1}
+.help-header-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:1px;color:var(--green)}
+.help-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:0.25rem}
+.help-body{padding:1.25rem}
+.help-body h2{font-size:1rem;color:var(--green);margin:1.5rem 0 0.6rem;padding:0.4rem 0.65rem;background:var(--surface);border-left:3px solid var(--green);border-radius:0 8px 8px 0}
+.help-body h2:first-child{margin-top:0}
+.help-body h3{font-size:0.88rem;color:#ccc;margin:1rem 0 0.4rem}
+.help-body p{font-size:0.82rem;color:#bbb;margin-bottom:0.6rem;line-height:1.65}
+.help-step{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:0.5rem}
+.help-step-title{font-weight:600;font-size:0.85rem;margin-bottom:0.2rem}
+.help-step-desc{font-size:0.78rem;color:var(--muted)}
+.help-step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--green);color:#000;font-size:0.7rem;font-weight:700;margin-right:0.4rem}
+.help-tip{background:#1a2e1a;border:1px solid #2a5a2a;border-radius:8px;padding:0.6rem 0.85rem;margin:0.6rem 0;font-size:0.78rem;color:#8fcf8f}
+.help-warn{background:#2e1a00;border:1px solid #5a3800;border-radius:8px;padding:0.6rem 0.85rem;margin:0.6rem 0;font-size:0.78rem;color:#d4a056}
+.help-tab-ref{display:inline-block;background:var(--surface2);border:1px solid var(--border);padding:0.05rem 0.4rem;border-radius:10px;font-size:0.72rem;font-weight:600;color:var(--green)}
 .back-btn{background:none;border:none;color:var(--green);font-size:1.4rem;cursor:pointer;padding:0;margin-right:0.75rem;display:none;transition:opacity 0.2s}
 .back-btn.visible{display:inline-flex}
 .content{flex:1;padding:1rem 1rem 6rem;overflow-y:auto}
@@ -354,7 +375,10 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <div id="app-screen" class="screen">
 <div class="topbar">
 <div style="display:flex;align-items:center;"><button class="back-btn" id="back-btn" onclick="goBack()">&#8249;</button><div><div class="topbar-title">ASL Driver Manager</div><div class="topbar-user" id="topbar-user"></div></div></div>
+<div style="display:flex;align-items:center;gap:0.75rem;">
+<button class="help-btn" onclick="toggleHelp()">?</button>
 <button class="logout-btn" onclick="logout()">Sign Out</button>
+</div>
 </div>
 <div class="content">
 <div class="tabs">
@@ -640,6 +664,93 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 </div>
 </div>
 
+<!-- HELP PANEL -->
+<div class="help-overlay" id="help-overlay" onclick="toggleHelp()"></div>
+<div class="help-panel" id="help-panel">
+<div class="help-header">
+<div class="help-header-title">&#128214; How to Use This App</div>
+<button class="help-close" onclick="toggleHelp()">&#10005;</button>
+</div>
+<div class="help-body">
+
+<h2>&#128276; Alerts — Your Daily Starting Point</h2>
+<p>This is your home screen. It shows everything due <strong>in the next 7 days</strong>. Think of it as your morning checklist.</p>
+<div class="help-step"><div class="help-step-title">&#128308; Red = Overdue</div><div class="help-step-desc">Should have been done already. Handle ASAP.</div></div>
+<div class="help-step"><div class="help-step-title">&#128992; Orange = Due today or tomorrow</div><div class="help-step-desc">Time-sensitive. Get to these today.</div></div>
+<div class="help-step"><div class="help-step-title">&#128993; Yellow = Due this week</div><div class="help-step-desc">On the horizon. Plan for these soon.</div></div>
+<p><strong>Tap an alert</strong> to jump straight to the action. <strong>Tap &#10005;</strong> to dismiss it (with confirmation).</p>
+
+<h2>&#128197; Schedule — What's Coming Up</h2>
+<p>All upcoming tasks by month. The app auto-generates these:</p>
+<div class="help-step"><div class="help-step-title">&#128994; Ride-Alongs</div><div class="help-step-desc">Every <strong>90 days</strong> per driver.</div></div>
+<div class="help-step"><div class="help-step-title">&#128309; Performance Reviews</div><div class="help-step-desc">Every <strong>180 days</strong> per driver (twice a year).</div></div>
+<div class="help-step"><div class="help-step-title">&#128992; Coaching</div><div class="help-step-desc">Auto-triggered when a driver has discipline issues or scored below 25/40. Recurs every <strong>30 days</strong>.</div></div>
+<div class="help-step"><div class="help-step-title">&#128313; Inspections</div><div class="help-step-desc">Manually scheduled by you using Quick Schedule.</div></div>
+<p>Use <strong>&#8249; &#8250;</strong> to flip months. Use <strong>filter buttons</strong> to zero in. <strong>Tap any task</strong> to take action.</p>
+
+<h2>&#9889; Quick Schedule</h2>
+<p>Below the filters on the Schedule tab — four buttons to manually schedule any task:</p>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">1</span> Tap the button</div><div class="help-step-desc">&#128663; Ride-Along, &#128203; Inspection, &#11088; Review, or &#128172; Coaching</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">2</span> Pick a driver and date</div><div class="help-step-desc">Calendar pops up when you tap the date field.</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">3</span> Add notes and hit Schedule</div><div class="help-step-desc">It'll show up in the schedule and alert you when it's due.</div></div>
+<div class="help-tip">&#128161; You can also schedule from a driver's profile in the Roster — tap "Schedule Ride-Along" or "Schedule Inspection" right in the modal.</div>
+
+<h2>&#128667; Performing a Ride-Along</h2>
+<p>Go to <span class="help-tab-ref">Log</span> &#8250; <span class="help-tab-ref">Perform Ride-Along</span>, or tap a ride-along alert.</p>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">1</span> Select driver and date</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">2</span> Rate 8 categories (1-5 stars each)</div><div class="help-step-desc">Professionalism, Safety, Customer Interaction, Placement Accuracy, Route Efficiency, Review Ask, Truck Condition, Documentation. Each has a notes field underneath.</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">3</span> Add overall notes &amp; photos</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">4</span> Save Scorecard</div><div class="help-step-desc">Next ride-along auto-schedules 90 days out.</div></div>
+<h3>Score Grades</h3>
+<div class="help-step"><div class="help-step-desc">&#128994; <strong>36-40 Excellent</strong> &nbsp;|&nbsp; &#128994; <strong>30-35 Good</strong> &nbsp;|&nbsp; &#128993; <strong>25-29 Needs Improvement</strong> &nbsp;|&nbsp; &#128308; <strong>Below 25 Below Standard</strong> (triggers coaching)</div></div>
+
+<h2>&#128101; Roster</h2>
+<p>All drivers organized by team. <strong>Tap a driver</strong> to open their profile:</p>
+<div class="help-step"><div class="help-step-title">&#128202; Stat boxes (tappable)</div><div class="help-step-desc">Reviews This Month, Ride-Alongs, Avg Score, Discipline — tap any to jump to that section.</div></div>
+<div class="help-step"><div class="help-step-title">&#9889; Quick action buttons</div><div class="help-step-desc">"Schedule Ride-Along" and "Schedule Inspection" — pre-selects the driver for you.</div></div>
+<div class="help-step"><div class="help-step-title">&#128203; Profile tabs</div><div class="help-step-desc">Overview (edit reviews, recent activity), Scorecards (past scores), Discipline (warnings), Notes (private notes), Photos.</div></div>
+
+<h2>&#11088; Reviews (Google)</h2>
+<p>Monthly leaderboard tracking Google reviews each driver earns.</p>
+<div class="help-step"><div class="help-step-title">Update review count</div><div class="help-step-desc">Go to <span class="help-tab-ref">Roster</span>, tap a driver, edit "Reviews This Month" and Save.</div></div>
+<p><strong>Tap any name</strong> on the leaderboard for their 12-month chart, best month, and win history.</p>
+
+<h2>&#128221; Logging Activities</h2>
+<p>The <span class="help-tab-ref">Log</span> tab has three sub-tabs:</p>
+<div class="help-step"><div class="help-step-title">General</div><div class="help-step-desc">Log a Performance Review, Coaching Session, Review Check-In, or Other. Pick driver, date, add notes &amp; photos.</div></div>
+<div class="help-step"><div class="help-step-title">Perform Ride-Along</div><div class="help-step-desc">The full 8-metric scorecard (see above).</div></div>
+<div class="help-step"><div class="help-step-title">Discipline</div><div class="help-step-desc">Record formal actions (see below).</div></div>
+
+<h2>&#9888;&#65039; Discipline Actions</h2>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">1</span> Pick the driver</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">2</span> Choose action type</div><div class="help-step-desc">Verbal Warning &#8250; Written Warning &#8250; Suspension &#8250; Termination</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">3</span> Set date, describe incident, attach evidence</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">4</span> Save or Email</div><div class="help-step-desc"><strong>Save</strong> to the system, or <strong>Email</strong> opens a pre-filled report you can send.</div></div>
+<div class="help-warn">&#9888;&#65039; Discipline records auto-trigger coaching sessions on the schedule.</div>
+
+<h2>&#9989; To-Dos</h2>
+<p>Your personal task list. Type a task, set priority (&#128308; High, &#128993; Medium, &#128994; Low), tap Add. Tap a to-do to mark it complete. The tab badge shows your open count.</p>
+
+<h2>&#129704; Quarterly Rocks</h2>
+<p>Big-picture goals for the quarter.</p>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">1</span> Select the quarter (Q1-Q4)</div><div class="help-step-desc">Auto-selects the current quarter on login.</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">2</span> Add a rock with priority</div><div class="help-step-desc">Due date auto-fills as the last day of that quarter.</div></div>
+<div class="help-step"><div class="help-step-title"><span class="help-step-num">3</span> Update status as you go</div><div class="help-step-desc">Not Started &#8250; On Track &#8250; At Risk &#8250; Complete</div></div>
+
+<h2>&#128220; History</h2>
+<p>Chronological log of everything recorded. Use the <strong>driver filter</strong> at the top to see one driver's full history.</p>
+
+<h2>&#129517; Navigation Tips</h2>
+<div class="help-step"><div class="help-step-title">&#8249; Back button</div><div class="help-step-desc">Appears top-left after navigating. Tap to retrace your steps.</div></div>
+<div class="help-step"><div class="help-step-title">Swipe the tab bar</div><div class="help-step-desc">8 tabs — swipe left/right to see them all.</div></div>
+<div class="help-step"><div class="help-step-title">Tap alerts &amp; schedule items</div><div class="help-step-desc">They're actionable — tapping jumps you to the right place with the driver pre-selected.</div></div>
+<div class="help-step"><div class="help-step-title">Tap stat boxes in driver profiles</div><div class="help-step-desc">All four boxes are tappable shortcuts.</div></div>
+
+<div class="help-tip" style="text-align:center;margin-top:1.5rem;"><strong>Golden rule:</strong> Start at <span class="help-tab-ref">&#128276; Alerts</span> each morning. Red first, then orange, then yellow. Everything else flows from there.</div>
+
+</div>
+</div>
+
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
 <button class="lightbox-close">&#10005;</button>
@@ -788,6 +899,14 @@ function logout() {
   document.getElementById('login-error').textContent = '';
   document.getElementById('app-screen').classList.remove('active');
   document.getElementById('login-screen').classList.add('active');
+}
+function toggleHelp() {
+  const panel = document.getElementById('help-panel');
+  const overlay = document.getElementById('help-overlay');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+  if (!isOpen) panel.scrollTop = 0;
 }
 
 // ════════════════════════════════════════════
