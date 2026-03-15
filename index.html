@@ -46,6 +46,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .topbar-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--green)}
 .topbar-user{font-size:0.72rem;color:var(--muted)}
 .logout-btn{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer}
+.back-btn{background:none;border:none;color:var(--green);font-size:1.4rem;cursor:pointer;padding:0;margin-right:0.75rem;display:none;transition:opacity 0.2s}
+.back-btn.visible{display:inline-flex}
 .content{flex:1;padding:1rem 1rem 6rem;overflow-y:auto}
 .tabs{display:flex;gap:0.5rem;margin-bottom:1.25rem;overflow-x:auto;padding-bottom:0.25rem}
 .tabs::-webkit-scrollbar{display:none}
@@ -65,6 +67,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .alert-sub{font-size:0.75rem;color:var(--muted)}
 .alert-badge{font-size:0.7rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:0.15rem}
 .no-alerts{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:0.85rem}
+.qa-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:1rem}
+.qa-btn{display:flex;flex-direction:column;align-items:center;gap:0.3rem;padding:0.7rem 0.25rem;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.qa-btn:active{transform:scale(0.95);border-color:var(--qa-color);background:color-mix(in srgb,var(--qa-color) 12%,var(--surface))}
+.qa-icon{font-size:1.3rem}
+.qa-btn:hover{border-color:var(--qa-color,var(--green))}
 
 /* SCHEDULE */
 .schedule-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
@@ -248,6 +255,9 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 .stat-box{background:var(--surface2);border-radius:10px;padding:0.65rem 0.4rem;text-align:center}
 .stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--green)}.stat-val.red{color:var(--red)}
 .stat-lbl{font-size:0.6rem;color:var(--muted);margin-top:0.1rem;line-height:1.2}
+.modal-quick-actions{display:flex;gap:0.5rem;margin-bottom:1rem}
+.mqa-btn{flex:1;padding:0.55rem 0.5rem;border-radius:10px;border:1px solid color-mix(in srgb,var(--mqa-c) 40%,var(--border));background:color-mix(in srgb,var(--mqa-c) 8%,var(--surface));color:var(--mqa-c);font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.mqa-btn:active{transform:scale(0.97);background:color-mix(in srgb,var(--mqa-c) 18%,var(--surface))}
 .modal-tabs{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
 .modal-tab{padding:0.4rem 0.85rem;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s}
 .modal-tab.active{background:var(--green);border-color:var(--green);color:#000;font-weight:700}
@@ -343,7 +353,7 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <!-- APP -->
 <div id="app-screen" class="screen">
 <div class="topbar">
-<div><div class="topbar-title">ASL Driver Manager</div><div class="topbar-user" id="topbar-user"></div></div>
+<div style="display:flex;align-items:center;"><button class="back-btn" id="back-btn" onclick="goBack()">&#8249;</button><div><div class="topbar-title">ASL Driver Manager</div><div class="topbar-user" id="topbar-user"></div></div></div>
 <button class="logout-btn" onclick="logout()">Sign Out</button>
 </div>
 <div class="content">
@@ -373,18 +383,30 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 </div>
 <div class="schedule-filter">
 <button class="sf-btn active" onclick="filterSchedule('all',this)">All</button>
-<button class="sf-btn" onclick="filterSchedule('Review',this)">Reviews</button>
 <button class="sf-btn" onclick="filterSchedule('Ride-Along',this)">Ride-Alongs</button>
 <button class="sf-btn" onclick="filterSchedule('Inspection',this)">Inspections</button>
+<button class="sf-btn" onclick="filterSchedule('Performance Review',this)">Performance Reviews</button>
 <button class="sf-btn" onclick="filterSchedule('Coaching',this)">Coaching</button>
 </div>
-<div id="inspection-scheduler" style="display:none;">
-<div class="log-form">
-<h3>&#128203; Schedule Surprise Inspection</h3>
+<div id="quick-schedule-section">
+<div class="quick-actions-bar" id="quick-actions-bar">
+<div class="section-label" style="margin-top:0;">&#9889; Quick Schedule</div>
+<div class="qa-row">
+<button class="qa-btn" onclick="openQuickSchedule('Ride-Along')" style="--qa-color:#2ECC71"><span class="qa-icon">&#128663;</span>Ride-Along</button>
+<button class="qa-btn" onclick="openQuickSchedule('Inspection')" style="--qa-color:#00BCD4"><span class="qa-icon">&#128203;</span>Inspection</button>
+<button class="qa-btn" onclick="openQuickSchedule('Performance Review')" style="--qa-color:#3498DB"><span class="qa-icon">&#11088;</span>Review</button>
+<button class="qa-btn" onclick="openQuickSchedule('Coaching Session')" style="--qa-color:#E67E22"><span class="qa-icon">&#128172;</span>Coaching</button>
+</div>
+</div>
+<div class="log-form" id="quick-schedule-form" style="display:none;">
+<h3 id="quick-schedule-title">&#128203; Schedule Task</h3>
 <div class="form-group"><label class="form-label">Driver</label><select class="form-select" id="insp-driver"></select></div>
 <div class="form-group"><label class="form-label">Date</label><input type="text" class="form-input flatpickr-date" id="insp-date" placeholder="Select date..." readonly></div>
-<div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-input" id="insp-notes" placeholder="What to inspect..."></div>
-<button class="submit-btn blue" onclick="scheduleInspection()">Schedule Inspection</button>
+<div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-input" id="insp-notes" placeholder="Add details..."></div>
+<div style="display:flex;gap:0.5rem;">
+<button class="submit-btn blue" style="flex:1;" onclick="scheduleInspection()">Schedule</button>
+<button class="submit-btn" style="flex:0;padding:0.6rem 1rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);" onclick="document.getElementById('quick-schedule-form').style.display='none'">Cancel</button>
+</div>
 </div>
 </div>
 <div id="schedule-list"></div>
@@ -556,6 +578,10 @@ span.flatpickr-weekday{color:var(--green)!important;font-weight:600!important}
 <div class="stat-box" onclick="switchModalTab('scorecards',document.querySelectorAll('.modal-tab')[1])" style="cursor:pointer;" title="View Scorecards"><div class="stat-val" id="stat-avgsc">&mdash;</div><div class="stat-lbl">Avg Score</div></div>
 <div class="stat-box" onclick="switchModalTab('discipline',document.querySelectorAll('.modal-tab')[2])" style="cursor:pointer;" title="View Discipline"><div class="stat-val red" id="stat-disc">0</div><div class="stat-lbl">Discipline</div></div>
 </div>
+<div class="modal-quick-actions" id="modal-quick-actions">
+<button class="mqa-btn" onclick="quickScheduleFromModal('Ride-Along',currentDriverId)" style="--mqa-c:#2ECC71">&#128663; Schedule Ride-Along</button>
+<button class="mqa-btn" onclick="quickScheduleFromModal('Inspection',currentDriverId)" style="--mqa-c:#00BCD4">&#128203; Schedule Inspection</button>
+</div>
 <div class="modal-tabs">
 <button class="modal-tab active" onclick="switchModalTab('overview',this)">Overview</button>
 <button class="modal-tab" onclick="switchModalTab('scorecards',this)">Scorecards</button>
@@ -669,6 +695,9 @@ let reviewViewDate = new Date();
 let currentQuarter = 'Q1';
 let selectedPri = 'medium', selectedRockPri = 'medium', selectedDiscType = null;
 let currentDriverId = null;
+let tabHistory = [];
+let currentTab = 'alerts';
+let quickScheduleType = 'Inspection';
 const pendingPhotos = { log: [], sc: [], disc: [] };
 const scScores = {};
 
@@ -769,7 +798,7 @@ function initApp() {
   renderAlerts(); renderSchedule(); renderRoster(); renderLeaderboard();
   renderHistory(); renderTodos(); renderRocks();
   document.getElementById('sync-btn').style.display = selectedUser === 'Dustin' ? 'block' : 'none';
-  document.getElementById('inspection-scheduler').style.display = (selectedUser === 'Clint' || selectedUser === 'Dustin') ? 'block' : 'none';
+  // Quick schedule section is always visible for all users
   const q = 'Q' + Math.ceil((new Date().getMonth() + 1) / 3);
   const qBtn = document.querySelector(`[onclick="selectQuarter('${q}',this)"]`);
   if (qBtn) selectQuarter(q, qBtn);
@@ -797,11 +826,24 @@ function setDates() {
 // ════════════════════════════════════════════
 // TABS
 // ════════════════════════════════════════════
-function switchTab(name, btn) {
+function switchTab(name, btn, skipHistory) {
+  if (!skipHistory && currentTab && currentTab !== name) {
+    tabHistory.push(currentTab);
+    if (tabHistory.length > 20) tabHistory.shift();
+  }
+  currentTab = name;
   document.querySelectorAll('.content>.tabs>.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
+  const backBtn = document.getElementById('back-btn');
+  if (backBtn) backBtn.classList.toggle('visible', tabHistory.length > 0);
+}
+function goBack() {
+  if (!tabHistory.length) return;
+  const prev = tabHistory.pop();
+  const btn = document.querySelector(`.content>.tabs>.tab[onclick*="'${prev}'"]`);
+  switchTab(prev, btn, true);
 }
 function switchLogTab(name, btn) {
   document.querySelectorAll('#log-subtabs .tab').forEach(t => t.classList.remove('active'));
@@ -840,7 +882,7 @@ function daysUntil(date) { const t = new Date(); t.setHours(0, 0, 0, 0); return 
 function buildScheduleItems() {
   const items = [];
   DRIVERS.forEach(dr => {
-    ['Performance Review', 'Ride-Along', 'Review Check-In'].forEach(type => {
+    ['Performance Review', 'Ride-Along'].forEach(type => {
       const due = getDueDate(dr.id, type);
       if (due) items.push({ driverId: dr.id, driverName: dr.name, type, dueDate: due, color: TYPE_COLORS[type] || '#888' });
     });
@@ -881,15 +923,35 @@ function renderAlerts() {
     else { cls = 'due-week'; icon = '&#128993;'; urgency = `Due in ${days}d`; }
     const bc = days < 0 ? '#E74C3C' : days <= 1 ? '#E67E22' : '#F1C40F';
     const alertKey = item.driverId + '-' + item.type + '-' + item.dueDate.toISOString().split('T')[0];
-    return `<div class="alert-banner ${cls}"><div class="alert-icon">${icon}</div><div class="alert-body"><div class="alert-title">${item.driverName} &mdash; ${item.type}</div><div class="alert-sub">${item.notes || ''}${item.auto ? ' (auto-triggered)' : ''}</div></div><div class="alert-badge" style="background:${bc}22;color:${bc}">${urgency}</div><button onclick="event.stopPropagation();dismissAlert('${alertKey}')" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:0.25rem;margin-left:0.5rem;flex-shrink:0;" title="Dismiss">&#10005;</button></div>`;
+    return `<div class="alert-banner ${cls}" onclick="handleAlertTap('${item.type}',${item.driverId})"><div class="alert-icon">${icon}</div><div class="alert-body"><div class="alert-title">${item.driverName} &mdash; ${item.type}</div><div class="alert-sub">${item.notes || ''}${item.auto ? ' (auto-triggered)' : ''}  &middot; Tap to take action</div></div><div class="alert-badge" style="background:${bc}22;color:${bc}">${urgency}</div><button onclick="event.stopPropagation();dismissAlert('${alertKey}','${item.driverName}','${item.type}')" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:0.25rem;margin-left:0.5rem;flex-shrink:0;" title="Dismiss this alert">&#10005;</button></div>`;
   }).join('');
 }
 
-function dismissAlert(key) {
+function dismissAlert(key, name, type) {
+  if (!confirm(`Are you sure you want to dismiss this alert?\n\n${name} — ${type}\n\nThis alert won't show again until the next cycle.`)) return;
   const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
   dismissed.push(key);
   localStorage.setItem('dismissedAlerts', JSON.stringify(dismissed));
   renderAlerts();
+}
+function handleAlertTap(type, driverId) {
+  if (type === 'Ride-Along') {
+    switchTab('log-activity', document.querySelector('[onclick*=log-activity]'));
+    setTimeout(() => {
+      const b = document.querySelector('#log-subtabs .tab:nth-child(2)');
+      if (b) switchLogTab('scorecard', b);
+      const sel = document.getElementById('sc-driver');
+      if (sel) sel.value = driverId;
+    }, 100);
+  } else if (type === 'Performance Review' || type === 'Coaching') {
+    switchTab('schedule', document.querySelector('[onclick*=schedule]'));
+    setTimeout(() => openQuickSchedule(type === 'Coaching' ? 'Coaching Session' : type), 150);
+    setTimeout(() => { document.getElementById('insp-driver').value = driverId; }, 300);
+  } else if (type === 'Inspection') {
+    switchTab('schedule', document.querySelector('[onclick*=schedule]'));
+    setTimeout(() => openQuickSchedule('Inspection'), 150);
+    setTimeout(() => { document.getElementById('insp-driver').value = driverId; }, 300);
+  }
 }
 
 function renderSchedule() {
@@ -903,19 +965,41 @@ function renderSchedule() {
     const days = daysUntil(item.dueDate);
     const dc = days < 0 ? 'overdue' : days <= 7 ? 'soon' : 'ok';
     const dl = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : formatDate(item.dueDate.toISOString().split('T')[0]);
-    return `<div class="schedule-item"><div class="schedule-dot" style="background:${item.color}"></div><div class="schedule-info"><div class="schedule-name">${item.driverName}</div><div class="schedule-type">${item.type}${item.auto ? ' &middot; Auto' : ''}</div></div><div class="schedule-date ${dc}">${dl}</div></div>`;
+    return `<div class="schedule-item" style="cursor:pointer" onclick="handleAlertTap('${item.type}',${item.driverId})"><div class="schedule-dot" style="background:${item.color}"></div><div class="schedule-info"><div class="schedule-name">${item.driverName}</div><div class="schedule-type">${item.type}${item.auto ? ' &middot; Auto' : ''} &middot; Tap to act</div></div><div class="schedule-date ${dc}">${dl}</div></div>`;
   }).join('');
 }
 
+function openQuickSchedule(type) {
+  quickScheduleType = type;
+  const icons = { 'Ride-Along': '&#128663;', 'Inspection': '&#128203;', 'Performance Review': '&#11088;', 'Coaching Session': '&#128172;' };
+  document.getElementById('quick-schedule-title').innerHTML = `${icons[type] || '&#128197;'} Schedule ${type}`;
+  document.getElementById('insp-notes').placeholder = type === 'Inspection' ? 'What to inspect...' : type === 'Ride-Along' ? 'Route or focus area...' : 'Details...';
+  document.getElementById('quick-schedule-form').style.display = 'block';
+  document.getElementById('quick-schedule-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function quickScheduleFromModal(type, driverId) {
+  closeModalDirect();
+  switchTab('schedule', document.querySelector('[onclick*=schedule]'));
+  setTimeout(() => {
+    openQuickSchedule(type);
+    document.getElementById('insp-driver').value = driverId;
+  }, 150);
+}
 async function scheduleInspection() {
   const driverId = parseInt(document.getElementById('insp-driver').value);
   const date = document.getElementById('insp-date').value;
   const notes = document.getElementById('insp-notes').value.trim();
   if (!date) { alert('Select a date.'); return; }
-  await sb.from('inspections').insert({ driver_id: driverId, date, notes, scheduled_by: selectedUser });
+  const type = quickScheduleType || 'Inspection';
+  if (type === 'Inspection') {
+    await sb.from('inspections').insert({ driver_id: driverId, date, notes, scheduled_by: selectedUser });
+  } else {
+    await sb.from('activities').insert({ driver_id: driverId, date, type, notes, logged_by: selectedUser });
+  }
   await loadAllData();
   document.getElementById('insp-notes').value = '';
-  alert('Inspection scheduled!');
+  document.getElementById('quick-schedule-form').style.display = 'none';
+  alert(`${type} scheduled for ${date}!`);
   renderSchedule(); renderAlerts();
 }
 
